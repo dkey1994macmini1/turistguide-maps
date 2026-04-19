@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oahu 6 Days — OpenStreetMap</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --bg: #08131f;
+      --panel: rgba(7, 16, 28, 0.92);
+      --panel-border: rgba(255,255,255,0.08);
+      --text: #eaf3ff;
+      --muted: #95a7bd;
+      --shadow: 0 14px 40px rgba(0,0,0,0.28);
+      --day1: #2ec4b6;
+      --day2: #ff9f1c;
+      --day3: #7bd389;
+      --day4: #ff5d8f;
+      --day5: #00bbf9;
+      --day6: #9b5de5;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; background: var(--bg); }
+    body { overflow: hidden; }
+    #map { height: 100vh; width: 100vw; }
+
+    .shell { position: relative; width: 100%; height: 100%; }
+    .panel {
+      position: absolute; top: 20px; left: 20px; width: 370px; max-height: calc(100vh - 40px);
+      overflow: auto; padding: 20px 18px 18px; border-radius: 24px; background: var(--panel);
+      border: 1px solid var(--panel-border); box-shadow: var(--shadow); backdrop-filter: blur(10px);
+      z-index: 1000; color: var(--text);
+    }
+    .eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #8ecae6; margin-bottom: 8px; font-weight: 700; }
+    h1 { margin: 0; font-size: 34px; line-height: 1; letter-spacing: -0.03em; }
+    .subtitle { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .meta { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { padding: 6px 10px; border-radius: 999px; font-size: 12px; color: #dbe8f8; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.06); }
+    .controls { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn { border: 0; border-radius: 14px; padding: 11px 14px; cursor: pointer; font-weight: 700; background: rgba(255,255,255,0.08); color: white; transition: 140ms ease; }
+    .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,0.12); }
+    .days { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+    .day-card { padding: 14px 14px 12px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.035); cursor: pointer; transition: 150ms ease; }
+    .day-card:hover { transform: translateY(-1px); background: rgba(255,255,255,0.06); }
+    .day-card.active { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.16); }
+    .day-head { display: flex; align-items: center; gap: 10px; }
+    .day-dot { width: 14px; height: 14px; border-radius: 999px; flex: 0 0 14px; box-shadow: 0 0 0 4px rgba(255,255,255,0.04); }
+    .day-title { font-size: 14px; font-weight: 800; letter-spacing: 0.01em; }
+    .day-desc { margin-top: 6px; font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .day-places { margin-top: 8px; font-size: 12px; color: #d8e4f2; line-height: 1.5; }
+    .footnote { margin-top: 16px; font-size: 11px; color: #7f92a9; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.07); padding-top: 12px; }
+    .leaflet-container { background: #d7ebff; }
+    .map-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; background: rgba(7,16,28,0.86); color: white; border: 1px solid rgba(255,255,255,0.08); font-size: 12px; font-weight: 700; box-shadow: var(--shadow); }
+    .legend-wrap { position: absolute; right: 18px; top: 18px; z-index: 1000; }
+    .custom-marker { width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center; color: white; font-weight: 800; font-size: 12px; border: 2px solid rgba(255,255,255,0.92); box-shadow: 0 6px 18px rgba(0,0,0,0.28); }
+    .wedding-marker { width: 34px; height: 34px; font-size: 16px; }
+    .leaflet-popup-content-wrapper { border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.18); }
+    .popup-title { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
+    .popup-meta { font-size: 12px; color: #506070; margin-bottom: 8px; }
+    .popup-copy { font-size: 12px; line-height: 1.45; color: #233142; }
+    @media (max-width: 900px) {
+      .panel { width: calc(100vw - 24px); left: 12px; right: 12px; top: 12px; max-height: 52vh; }
+      .legend-wrap { top: auto; bottom: 14px; right: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div id="map"></div>
+    <aside class="panel">
+      <div class="eyebrow">Turistguide · Oahu itinerary</div>
+      <h1>Oahu 6 Days</h1>
+      <div class="subtitle">
+        Realna mapa na <strong>OpenStreetMap</strong>, oparta na planie z wiki. Kliknij dzień po lewej — mapa zawęzi się do trasy i miejsc z tego dnia.
+      </div>
+      <div class="meta">
+        <span class="chip">May 1–6, 2026</span>
+        <span class="chip">Wedding trip</span>
+        <span class="chip">Surf · snorkel · nature</span>
+      </div>
+      <div class="controls">
+        <button class="btn" id="show-all">Pokaż całość</button>
+        <button class="btn" id="toggle-routes">Ukryj trasy</button>
+      </div>
+      <div class="days" id="days"></div>
+      <div class="footnote">
+        <strong>Uczciwie:</strong> część pinów to dokładne wyniki OSM/Nominatim, część to ręcznie dobrane punkty referencyjne dla atrakcji, których OSM nie zwrócił 1:1 pod pełną nazwą. Do planowania dnia są wystarczająco dobre, ale nie traktowałbym tego jako nawigacji pod sam parking.
+      </div>
+    </aside>
+    <div class="legend-wrap"><div class="map-badge">🗺️ OpenStreetMap · Damian & wedding week</div></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const days = [
+      { id: 1, color: getComputedStyle(document.documentElement).getPropertyValue('--day1').trim(), title: 'Day 1 — Waikiki / Manoa', desc: 'Dżungla, pierwsze widoki i miękkie wejście w klimat wyspy.', points: [
+        { name: 'Manoa Falls', lat: 21.3420596, lng: -157.7991809, note: 'Poranek w zieleni. Idź wcześnie, bo potem robi się tłoczno i błotniście.' },
+        { name: 'Waikiki Beach', lat: 21.2741046, lng: -157.8243118, note: 'Lekki reset po locie, pierwszy kontakt z wodą i orientacja w Honolulu.' },
+        { name: 'Tantalus Lookout', lat: 21.3332, lng: -157.8058, note: 'Najlepiej o zachodzie. Panorama Honolulu bez wysiłku.' }
+      ]},
+      { id: 2, color: getComputedStyle(document.documentElement).getPropertyValue('--day2').trim(), title: 'Day 2 — Pearl Harbor / Pali', desc: 'Mocny dzień historyczny z dobrym kontrapunktem widokowym.', points: [
+        { name: 'Pearl Harbor Visitor Center', lat: 21.3674843, lng: -157.9384488, note: 'Rdzeń dnia. Tu nie ma sensu się spieszyć.' },
+        { name: 'Nuuanu Pali Lookout', lat: 21.3711, lng: -157.7975, note: 'Krótki, mocny przystanek po drodze powrotnej. Widok robi robotę.' },
+        { name: 'Ko Olina', lat: 21.3281625, lng: -158.1219874, note: 'Opcjonalny spokojny finał przy wodzie, jeśli nie chcecie wracać od razu do Waikiki.' }
+      ]},
+      { id: 3, color: getComputedStyle(document.documentElement).getPropertyValue('--day3').trim(), title: 'Day 3 — Windward Coast', desc: 'Lekki dzień przed ślubem: sunrise, ogród i spokojna plaża.', points: [
+        { name: 'Lanikai Pillbox Trail', lat: 21.387919, lng: -157.7178727, note: 'Wyjazd przed świtem. Dla tego widoku warto wstać brutalnie wcześnie.' },
+        { name: "Ho'omaluhia Botanical Garden", lat: 21.3882747, lng: -157.8070148, note: 'Ko\'olau cliffs z bliska. Jedno z tych miejsc, które w realu są lepsze niż na zdjęciach.' },
+        { name: 'Lanikai Beach', lat: 21.3917342, lng: -157.7148121, note: 'Plaża na spokojne wyhamowanie, nie na odhaczanie.' },
+        { name: 'Byodo-In Temple', lat: 21.4226, lng: -157.8358, note: 'Dobry, cichy finał dnia. Jedź po 15:30.' }
+      ]},
+      { id: 4, color: getComputedStyle(document.documentElement).getPropertyValue('--day4').trim(), title: 'Day 4 — Wedding', desc: 'Dzień nieruchomy. Zero kombinowania z ambitnym sightseeingiem.', points: [
+        { name: 'Wedding base — Waikiki', lat: 21.2793568, lng: -157.8285713, note: 'Pełny dzień zarezerwowany. Jedyny sensowny task rano: złapać booking na Hanauma Bay.' }
+      ]},
+      { id: 5, color: getComputedStyle(document.documentElement).getPropertyValue('--day5').trim(), title: 'Day 5 — North Shore', desc: 'Dzień po ślubie. North Shore bez zimowego szaleństwa, ale z piękną linią brzegu.', points: [
+        { name: 'Waimea Valley', lat: 21.6403, lng: -158.0560, note: 'Botanika + wodospad. Dobre tempo na dzień po weselu.' },
+        { name: 'Laniakea Beach', lat: 21.6379, lng: -158.1055, note: 'Żółwie to nie atrakcja do podbiegania. Trzymaj dystans.' },
+        { name: 'Ehukai / Banzai Pipeline', lat: 21.6649, lng: -158.0535, note: 'W maju bardziej symboliczne niż spektakularne — ale i tak warto stanąć.' },
+        { name: 'Haleiwa Town', lat: 21.5876272, lng: -158.1035648, note: 'Shave ice, luz i dobre zamknięcie dnia.' }
+      ]},
+      { id: 6, color: getComputedStyle(document.documentElement).getPropertyValue('--day6').trim(), title: 'Day 6 — Southeast Coast', desc: 'Snorkel + klify + ostatni surf. Bardzo mocny closing day.', points: [
+        { name: 'Hanauma Bay', lat: 21.2690, lng: -157.6938, note: 'Najbardziej logistycznie wrażliwy punkt całego planu. Bez wcześniejszego bookingu nie ma tematu.' },
+        { name: "Makapu'u Lighthouse Trail", lat: 21.3099, lng: -157.6557, note: 'Łatwy spacer, ale krajobraz pierwsza liga.' },
+        { name: 'Queens / Waikiki final surf', lat: 21.2711, lng: -157.8217, note: 'Jeśli zostanie energia i swell, to jest dobry finał Oahu.' }
+      ]}
+    ];
+
+    const map = L.map('map', { zoomControl: false });
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+
+    const allLayers = [];
+    const dayLayers = new Map();
+    let routesVisible = true;
+    let activeDay = null;
+
+    function createMarkerIcon(dayId, color, isWedding = false) {
+      const className = isWedding ? 'custom-marker wedding-marker' : 'custom-marker';
+      const html = `<div class="${className}" style="background:${color}">${isWedding ? '❤' : dayId}</div>`;
+      return L.divIcon({ html, className: '', iconSize: isWedding ? [34,34] : [28,28], iconAnchor: isWedding ? [17,17] : [14,14], popupAnchor: [0,-12] });
+    }
+    function popupHtml(day, point) {
+      return `<div class="popup-title">${point.name}</div><div class="popup-meta">${day.title}</div><div class="popup-copy">${point.note}</div>`;
+    }
+
+    days.forEach(day => {
+      const featureGroup = L.featureGroup();
+      const latlngs = [];
+      day.points.forEach(point => {
+        const marker = L.marker([point.lat, point.lng], { icon: createMarkerIcon(day.id, day.color, day.id === 4) }).bindPopup(popupHtml(day, point));
+        marker.on('mouseover', function() { this.openPopup(); });
+        marker.addTo(featureGroup);
+        latlngs.push([point.lat, point.lng]);
+      });
+      if (latlngs.length > 1) {
+        const route = L.polyline(latlngs, { color: day.color, weight: day.id === 4 ? 4 : 5, opacity: 0.82, dashArray: day.id === 4 ? '8 8' : null, lineCap: 'round', lineJoin: 'round' });
+        route.addTo(featureGroup);
+        featureGroup.route = route;
+      }
+      dayLayers.set(day.id, featureGroup);
+      featureGroup.addTo(map);
+      allLayers.push(featureGroup);
+    });
+
+    const allBounds = L.featureGroup(allLayers).getBounds().pad(0.18);
+    map.fitBounds(allBounds);
+
+    function renderDayCards() {
+      const root = document.getElementById('days');
+      root.innerHTML = '';
+      for (const day of days) {
+        const el = document.createElement('div');
+        el.className = `day-card ${activeDay === day.id ? 'active' : ''}`;
+        el.innerHTML = `<div class="day-head"><div class="day-dot" style="background:${day.color}"></div><div class="day-title">${day.title}</div></div><div class="day-desc">${day.desc}</div><div class="day-places">${day.points.map(p => p.name).join(' · ')}</div>`;
+        el.addEventListener('click', () => focusDay(day.id));
+        root.appendChild(el);
+      }
+    }
+    function showOnlyDay(dayId) {
+      for (const [id, layer] of dayLayers.entries()) {
+        const shouldShow = id === dayId;
+        if (shouldShow && !map.hasLayer(layer)) layer.addTo(map);
+        if (!shouldShow && map.hasLayer(layer)) map.removeLayer(layer);
+      }
+    }
+    function showAllDays() {
+      for (const layer of dayLayers.values()) if (!map.hasLayer(layer)) layer.addTo(map);
+      activeDay = null; renderDayCards(); map.flyToBounds(allBounds, { duration: 0.9, padding: [24, 24] });
+    }
+    function focusDay(dayId) {
+      const same = activeDay === dayId;
+      if (same) return showAllDays();
+      activeDay = dayId; showOnlyDay(dayId); renderDayCards();
+      const bounds = dayLayers.get(dayId).getBounds().pad(0.3);
+      map.flyToBounds(bounds, { duration: 0.8, padding: [24, 24] });
+    }
+    function toggleRoutes() {
+      routesVisible = !routesVisible;
+      for (const layer of dayLayers.values()) {
+        if (!layer.route) continue;
+        if (routesVisible && !layer.hasLayer(layer.route)) layer.addLayer(layer.route);
+        if (!routesVisible && layer.hasLayer(layer.route)) layer.removeLayer(layer.route);
+      }
+      document.getElementById('toggle-routes').textContent = routesVisible ? 'Ukryj trasy' : 'Pokaż trasy';
+    }
+
+    document.getElementById('show-all').addEventListener('click', showAllDays);
+    document.getElementById('toggle-routes').addEventListener('click', toggleRoutes);
+    renderDayCards();
+  </script>
+</body>
+</html>
