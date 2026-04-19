@@ -1,25 +1,6 @@
 // Database connection module
-// Provides a Drizzle client connected to Postgres via Effect
+// Re-exports from the adapters/db module for backward compatibility
 
-import { Effect } from "effect";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-
-export type DatabaseConnectionError = {
-  readonly _tag: "DatabaseConnectionError";
-  readonly error: unknown;
-};
-
-export const createDbClient = (databaseUrl: string) =>
-  Effect.try({
-    try: () => {
-      const sql = postgres(databaseUrl);
-      return drizzle(sql);
-    },
-    catch: (error): DatabaseConnectionError => ({
-      _tag: "DatabaseConnectionError" as const,
-      error,
-    }),
-  });
-
-export type DbClient = Effect.Effect.Success<ReturnType<typeof createDbClient>>;
+export { createDbClient, type DbClient, type DatabaseConnectionError } from "../../adapters/db/client";
+export { RepositoryError } from "../../adapters/db/client";
+export type { RepositoryError as RepositoryErrorType } from "../../adapters/db/client";
