@@ -18,3 +18,19 @@ export type SlugValidationError = {
   readonly slug: string;
   readonly message: string;
 };
+
+// Repository error types — for data access layer
+export type RepositoryError =
+  | { readonly _tag: "RepositoryError"; readonly cause: unknown }
+  | { readonly _tag: "NotFoundError"; readonly id: string };
+
+export const RepositoryError = {
+  from: (cause: unknown): RepositoryError => ({
+    _tag: "RepositoryError" as const,
+    cause,
+  }),
+  notFound: (id: string): RepositoryError => ({
+    _tag: "NotFoundError" as const,
+    id,
+  }),
+};

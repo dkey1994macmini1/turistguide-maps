@@ -1,23 +1,17 @@
-// Read model — returns full plan with nested days and stops
-// Uses Drizzle queries with inArray for efficient multi-stop loading
+// Postgres Read Model — implements ReadModelPort as an Effect Layer
+// Returns full plan with nested days and stops
 
-import { Effect } from "effect";
-import { eq, inArray } from "drizzle-orm";
-import type { DbClient, RepositoryError } from "./client";
-import { RepositoryError as RepoErr } from "./client";
+import { Effect, Layer } from "effect";
+import { ReadModelPort, type ReadModel, type PlanReadModel } from "../../core/ports/read-model-port";
+import { RepositoryError } from "../../core/errors";
+import { PlanId, DayId, StopId, Slug } from "../../core/branded";
+import type { Plan } from "../../core/plan";
+import type { Day } from "../../core/day";
+import type { Stop } from "../../core/stop";
+import type { StopLink } from "../../core/stop-link";
 import { plans, days, stops } from "./schema";
-import { PlanId, DayId, StopId, Slug } from "@/domain/branded";
-import type { Plan } from "@/domain/plan";
-import type { Day } from "@/domain/day";
-import type { Stop } from "@/domain/stop";
-import type { StopLink } from "@/domain/stop-link";
-
-/** Full plan read model — plan with nested days and stops */
-export type PlanReadModel = Plan & {
-  days: Array<Day & {
-    stops: Stop[];
-  }>;
-};
+import { eq, inArray } from "drizzle-orm";
+import { DbClientLive, type DbClient } from "./client";
 
 /** Convert a stop DAO row to domain Stop */
 const toStop = (row: typeof stops.$inferSelect): Stop => ({
@@ -66,48 +60,56 @@ const buildReadModel = (
   })),
 });
 
-/** Get a full plan by slug with nested days and stops */
-export const getPlanReadModelBySlug = (db: DbClient) => (slug: string): Effect.Effect<PlanReadModel, RepositoryError> =>
-  Effect.tryPromise({
-    try: async () => {
-      const [planRow] = await db.select().from(plans).where(eq(plans.slug, slug)).limit(1);
-      if (!planRow) throw { _tag: "NotFoundError" as const, id: slug };
+const makePostgresReadModel = (db: DbClient): ReadModel => ({
+  getPlanReadModelBySlug: (slug: string) =>
+    Effect.tryPromise({
+      try: async () => {
+        const [planRow] = await db.select().from(plans).where(eq(plans.slug, slug)).limit(1);
+        if (!planRow) throw { _tag: "NotFoundError" as const, id: slug };
 
-      const dayRows = await db.select().from(days).where(eq(days.planId, planRow.id)).orderBy(days.dayNumber);
-      const dayIds = dayRows.map((d) => d.id);
+        const dayRows = await db.select().from(days).where(eq(days.planId, planRow.id)).orderBy(days.dayNumber);
+        const dayIds = dayRows.map((d) => d.id);
 
-      const stopRows = dayIds.length > 0
-        ? await db.select().from(stops).where(inArray(stops.dayId, dayIds)).orderBy(stops.sortOrder)
-        : [];
+        const stopRows = dayIds.length > 0
+          ? await db.select().from(stops).where(inArray(stops.dayId, dayIds)).orderBy(stops.sortOrder)
+          : [];
 
-      return buildReadModel(planRow, dayRows, stopRows);
-    },
-    catch: (error): RepositoryError => {
-      if (error && typeof error === "object" && "_tag" in error && error._tag === "NotFoundError")
-        return error as RepositoryError;
-      return RepoErr.from(error);
-    },
-  });
+        return buildReadModel(planRow, dayRows, stopRows);
+      },
+      catch: (error): RepositoryError => {
+        if (error && typeof error === "object" && "_tag" in error && error._tag === "NotFoundError")
+          return error as RepositoryError;
+        return RepositoryError.from(error);
+      },
+    }),
 
-/** Get a full plan by ID with nested days and stops */
-export const getPlanReadModelById = (db: DbClient) => (id: string): Effect.Effect<PlanReadModel, RepositoryError> =>
-  Effect.tryPromise({
-    try: async () => {
-      const [planRow] = await db.select().from(plans).where(eq(plans.id, id)).limit(1);
-      if (!planRow) throw { _tag: "NotFoundError" as const, id };
+  getPlanReadModelById: (id: string) =>
+    Effect.tryPromise({
+      try: async () => {
+        const [planRow] = await db.select().from(plans).where(eq(plans.id, id)).limit(1);
+        if (!planRow) throw { _tag: "NotFoundError" as const, id };
 
-      const dayRows = await db.select().from(days).where(eq(days.planId, planRow.id)).orderBy(days.dayNumber);
-      const dayIds = dayRows.map((d) => d.id);
+        const dayRows = await db.select().from(days).where(eq(days.planId, planRow.id)).orderBy(days.dayNumber);
+        const dayIds = dayRows.map((d) => d.id);
 
-      const stopRows = dayIds.length > 0
-        ? await db.select().from(stops).where(inArray(stops.dayId, dayIds)).orderBy(stops.sortOrder)
-        : [];
+        const stopRows = dayIds.length > 0
+          ? await db.select().from(stops).where(inArray(stops.dayId, dayIds)).orderBy(stops.sortOrder)
+          : [];
 
-      return buildReadModel(planRow, dayRows, stopRows);
-    },
-    catch: (error): RepositoryError => {
-      if (error && typeof error === "object" && "_tag" in error && error._tag === "NotFoundError")
-        return error as RepositoryError;
-      return RepoErr.from(error);
-    },
-  });
+        return buildReadModel(planRow, dayRows, stopRows);
+      },
+      catch: (error): RepositoryError => {
+        if (error && typeof error === "object" && "_tag" in error && error._tag === "NotFoundError")
+          return error as RepositoryError;
+        return RepositoryError.from(error);
+      },
+    }),
+});
+
+export const PostgresReadModelLive = Layer.effect(
+  ReadModelPort,
+  Effect.gen(function* () {
+    const db = yield* DbClientLive;
+    return ReadModelPort.of(makePostgresReadModel(db));
+  })
+);

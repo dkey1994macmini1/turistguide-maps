@@ -1,9 +1,9 @@
 // Seed data — Oahu 6-day trip based on public/oahu/index.html
 // Inserts 1 plan, 6 days, and 18 stops with realistic coordinates and descriptions
 
-import type { PlanCreateInput } from "@/domain/plan";
-import type { DayCreateInput } from "@/domain/day";
-import type { StopCreateInput } from "@/domain/stop";
+import type { PlanCreateInput } from "../../core/plan";
+import type { DayCreateInput } from "../../core/day";
+import type { StopCreateInput } from "../../core/stop";
 
 // ── Plan ──
 

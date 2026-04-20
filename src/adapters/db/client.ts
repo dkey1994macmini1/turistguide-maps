@@ -1,7 +1,8 @@
 // Database client — wraps Drizzle with Effect for connection creation
 // Provides a typed DbClient that includes schema relations
+// RepositoryError and NotFoundError moved to core/errors.ts
 
-import { Effect } from "effect";
+import { Effect, Context } from "effect";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
@@ -26,18 +27,5 @@ export const createDbClient = (databaseUrl: string) =>
 // Typed client that includes schema relations for relational queries
 export type DbClient = ReturnType<typeof drizzle<typeof schema, any>>;
 
-// Repository error type — tagged for Effect pattern matching
-export type RepositoryError =
-  | { _tag: "RepositoryError"; cause: unknown }
-  | { _tag: "NotFoundError"; id: string };
-
-export const RepositoryError = {
-  from: (cause: unknown): RepositoryError => ({
-    _tag: "RepositoryError" as const,
-    cause,
-  }),
-  notFound: (id: string): RepositoryError => ({
-    _tag: "NotFoundError" as const,
-    id,
-  }),
-};
+// Effect Service for DB client — used in Layer wiring
+export class DbClientLive extends Context.Tag("DbClient")<DbClientLive, DbClient>() {}
