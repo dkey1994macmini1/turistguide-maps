@@ -1,11 +1,14 @@
 import { Effect, Layer } from "effect";
-import { ReadModelPort, type ReadModel, type PlanReadModel } from "../core/ports/read-model-port";
-import { PlanRepositoryPort } from "../core/ports/plan-repository-port";
-import { DayRepositoryPort } from "../core/ports/day-repository-port";
-import { StopRepositoryPort } from "../core/ports/stop-repository-port";
-import { RepositoryError } from "../core/errors";
-import type { Day } from "../core/day";
-import type { Stop } from "../core/stop";
+import { ReadModelPort, type ReadModel, type PlanReadModel } from "@/core/ports/read-model-port";
+import { PlanRepositoryPort } from "@/core/ports/plan-repository-port";
+import { DayRepositoryPort } from "@/core/ports/day-repository-port";
+import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
+import { RepositoryError } from "@/core/errors";
+import type { Day } from "@/core/day";
+import type { Stop } from "@/core/stop";
+import { makeInMemoryPlanRepositoryLayer } from "./in-memory-plan-repository";
+import { makeInMemoryDayRepositoryLayer } from "./in-memory-day-repository";
+import { makeInMemoryStopRepositoryLayer } from "./in-memory-stop-repository";
 
 const makeInMemoryReadModel = (
   planRepo: typeof PlanRepositoryPort.Service,
@@ -23,7 +26,7 @@ const makeInMemoryReadModel = (
         })
       );
       return { ...plan, days: daysWithStops } as PlanReadModel;
-    }),
+    }) as Effect.Effect<PlanReadModel, RepositoryError>,
 
   getPlanReadModelById: (id: string) =>
     Effect.gen(function* () {
@@ -36,15 +39,35 @@ const makeInMemoryReadModel = (
         })
       );
       return { ...plan, days: daysWithStops } as PlanReadModel;
-    }),
+    }) as Effect.Effect<PlanReadModel, RepositoryError>,
 });
 
-export const InMemoryReadModelLive = Layer.effect(
-  ReadModelPort,
-  Effect.gen(function* () {
-    const planRepo = yield* PlanRepositoryPort;
-    const dayRepo = yield* DayRepositoryPort;
-    const stopRepo = yield* StopRepositoryPort;
-    return ReadModelPort.of(makeInMemoryReadModel(planRepo, dayRepo, stopRepo));
-  })
+// Build a ReadModel layer that depends on external repo layers (shared state)
+export const makeInMemoryReadModelLayer = (
+  repoLayer: Layer.Layer<PlanRepositoryPort | DayRepositoryPort | StopRepositoryPort>,
+) =>
+  Layer.effect(
+    ReadModelPort,
+    Effect.gen(function* () {
+      const planRepo = yield* PlanRepositoryPort;
+      const dayRepo = yield* DayRepositoryPort;
+      const stopRepo = yield* StopRepositoryPort;
+      return ReadModelPort.of(makeInMemoryReadModel(planRepo, dayRepo, stopRepo));
+    }),
+  ).pipe(Layer.provide(repoLayer));
+
+// Convenience: full in-memory layer with fresh repos
+export const makeInMemoryFullLayer = () => {
+  const repoLayer = Layer.merge(
+    Layer.merge(makeInMemoryPlanRepositoryLayer(), makeInMemoryDayRepositoryLayer()),
+    makeInMemoryStopRepositoryLayer(),
+  );
+  return Layer.merge(makeInMemoryReadModelLayer(repoLayer), repoLayer);
+};
+
+export const InMemoryReadModelLive = makeInMemoryReadModelLayer(
+  Layer.merge(
+    Layer.merge(makeInMemoryPlanRepositoryLayer(), makeInMemoryDayRepositoryLayer()),
+    makeInMemoryStopRepositoryLayer(),
+  ),
 );

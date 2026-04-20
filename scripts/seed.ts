@@ -1,12 +1,28 @@
 // Seed script — populates the database with Oahu demo data
 
-import { Effect } from "effect";
-import { createDbClient } from "../src/adapters/db/client";
-import { createPlan } from "../src/adapters/db/plan-repository";
-import { createDay } from "../src/adapters/db/day-repository";
-import { createStop } from "../src/adapters/db/stop-repository";
+import { Effect, Layer } from "effect";
+import { createDbClient, DbClientLive } from "../src/adapters/db/client";
+import { PostgresPlanRepositoryLive } from "../src/adapters/db/plan-repository";
+import { PostgresDayRepositoryLive } from "../src/adapters/db/day-repository";
+import { PostgresStopRepositoryLive } from "../src/adapters/db/stop-repository";
+import { PlanRepositoryPort } from "../src/core/ports/plan-repository-port";
+import { DayRepositoryPort } from "../src/core/ports/day-repository-port";
+import { StopRepositoryPort } from "../src/core/ports/stop-repository-port";
 import { oahuPlan, oahuDays, oahuStopsByDay } from "../src/adapters/db/seed-data";
-import { PlanId } from "../src/domain/branded";
+
+const DbLayer = Layer.effect(
+  DbClientLive,
+  Effect.gen(function* () {
+    const url = process.env.DATABASE_URL;
+    if (!url) throw new Error("DATABASE_URL is not set");
+    return yield* createDbClient(url);
+  })
+);
+
+const AppLayer = Layer.merge(
+  Layer.merge(PostgresPlanRepositoryLive, PostgresDayRepositoryLive),
+  PostgresStopRepositoryLive
+).pipe(Layer.provide(DbLayer));
 
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -15,32 +31,36 @@ async function main() {
     process.exit(1);
   }
 
-  const db = await Effect.runPromise(createDbClient(databaseUrl));
-
   console.log("🌱 Seeding database...");
 
-  // Create the plan
-  const plan = await Effect.runPromise(createPlan(db)(oahuPlan));
-  console.log(`✅ Created plan: ${plan.title} (${plan.slug})`);
+  const result = await Effect.runPromise(
+    Effect.gen(function* () {
+      const planRepo = yield* PlanRepositoryPort;
+      const dayRepo = yield* DayRepositoryPort;
+      const stopRepo = yield* StopRepositoryPort;
 
-  // Create days and their stops
-  for (const dayInput of oahuDays) {
-    const day = await Effect.runPromise(
-      createDay(db)({ ...dayInput, planId: plan.id })
-    );
-    console.log(`  ✅ Created ${day.title}`);
+      // Create the plan
+      const plan = yield* planRepo.createPlan(oahuPlan);
+      console.log(`✅ Created plan: ${plan.title} (${plan.slug})`);
 
-    // Create stops for this day
-    const stopsForDay = oahuStopsByDay[day.dayNumber] ?? [];
-    for (const stopInput of stopsForDay) {
-      const stop = await Effect.runPromise(
-        createStop(db)({ ...stopInput, dayId: day.id })
-      );
-      console.log(`    ✅ Created stop: ${stop.title}`);
-    }
-  }
+      // Create days and their stops
+      for (const dayInput of oahuDays) {
+        const day = yield* dayRepo.createDay({ ...dayInput, planId: plan.id });
+        console.log(`  ✅ Created ${day.title ?? `Day ${day.dayNumber}`}`);
 
-  console.log("🎉 Seeding complete!");
+        // Create stops for this day
+        const stopsForDay = oahuStopsByDay[day.dayNumber] ?? [];
+        for (const stopInput of stopsForDay) {
+          const stop = yield* stopRepo.createStop({ ...stopInput, dayId: day.id });
+          console.log(`    ✅ Created stop: ${stop.title}`);
+        }
+      }
+
+      return "🎉 Seeding complete!";
+    }).pipe(Effect.provide(AppLayer))
+  );
+
+  console.log(result);
 }
 
 main().catch((err) => {

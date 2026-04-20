@@ -2,21 +2,20 @@ import { describe, it, expect } from "vitest";
 import { Effect, Layer } from "effect";
 import { DayRepositoryPort } from "@/core/ports/day-repository-port";
 import { PlanRepositoryPort } from "@/core/ports/plan-repository-port";
-import { InMemoryDayRepositoryLive } from "@/fakes/in-memory-day-repository";
-import { InMemoryPlanRepositoryLive } from "@/fakes/in-memory-plan-repository";
+import { makeInMemoryDayRepositoryLayer } from "@/fakes/in-memory-day-repository";
+import { makeInMemoryPlanRepositoryLayer } from "@/fakes/in-memory-plan-repository";
 import { RepositoryError } from "@/core/errors";
-
-// DayRepository needs a plan to exist first (foreign key)
-const TestLayer = Layer.merge(InMemoryPlanRepositoryLive, InMemoryDayRepositoryLive);
-
-const runWithFakes = <A, E>(effect: Effect.Effect<A, E, DayRepositoryPort | PlanRepositoryPort>) =>
-  Effect.runPromise(effect.pipe(Effect.provide(TestLayer)));
 
 describe("DayRepository Contract", () => {
   describe("InMemory implementation", () => {
+    // Fresh layers per test for isolation
+    const makeTestLayer = () =>
+      Layer.merge(makeInMemoryPlanRepositoryLayer(), makeInMemoryDayRepositoryLayer());
+
     it("should create a day and retrieve it by ID", async () => {
-      const result = await runWithFakes(
-        Effect.gen(function* () {
+      const TestLayer = makeTestLayer();
+      const result = await Effect.runPromise(
+        Effect.gen(function* (_) {
           const planRepo = yield* PlanRepositoryPort;
           const dayRepo = yield* DayRepositoryPort;
           const plan = yield* planRepo.createPlan({
@@ -31,15 +30,16 @@ describe("DayRepository Contract", () => {
           });
           const found = yield* dayRepo.getDayById(day.id);
           return { day, found };
-        })
+        }).pipe(Effect.provide(TestLayer))
       );
       expect(result.found.id).toBe(result.day.id);
       expect(result.found.dayNumber).toBe(1);
     });
 
     it("should list days for a plan", async () => {
-      const days = await runWithFakes(
-        Effect.gen(function* () {
+      const TestLayer = makeTestLayer();
+      const days = await Effect.runPromise(
+        Effect.gen(function* (_) {
           const planRepo = yield* PlanRepositoryPort;
           const dayRepo = yield* DayRepositoryPort;
           const plan = yield* planRepo.createPlan({
@@ -50,7 +50,7 @@ describe("DayRepository Contract", () => {
           yield* dayRepo.createDay({ planId: plan.id, dayNumber: 1 });
           yield* dayRepo.createDay({ planId: plan.id, dayNumber: 2 });
           return yield* dayRepo.listDaysByPlanId(plan.id);
-        })
+        }).pipe(Effect.provide(TestLayer))
       );
       expect(days).toHaveLength(2);
       expect(days[0].dayNumber).toBe(1);
@@ -58,34 +58,35 @@ describe("DayRepository Contract", () => {
     });
 
     it("should return NotFoundError for non-existent day", async () => {
+      const TestLayer = makeTestLayer();
       const exit = await Effect.runPromiseExit(
-        runWithFakes(
-          Effect.gen(function* () {
-            const repo = yield* DayRepositoryPort;
-            yield* repo.getDayById("nonexistent");
-          })
-        )
+        Effect.gen(function* (_) {
+          const repo = yield* DayRepositoryPort;
+          yield* repo.getDayById("nonexistent");
+        }).pipe(Effect.provide(TestLayer))
       );
       expect(exit._tag).toBe("Failure");
     });
 
     it("should update a day", async () => {
-      const result = await runWithFakes(
-        Effect.gen(function* () {
+      const TestLayer = makeTestLayer();
+      const result = await Effect.runPromise(
+        Effect.gen(function* (_) {
           const planRepo = yield* PlanRepositoryPort;
           const dayRepo = yield* DayRepositoryPort;
           const plan = yield* planRepo.createPlan({ slug: "update-day", title: "Update", description: "" });
           const day = yield* dayRepo.createDay({ planId: plan.id, dayNumber: 1, title: "Old Title" });
           const updated = yield* dayRepo.updateDay(day.id, { title: "New Title" });
           return { day, updated };
-        })
+        }).pipe(Effect.provide(TestLayer))
       );
       expect(result.updated.title).toBe("New Title");
     });
 
     it("should delete a day", async () => {
-      await runWithFakes(
-        Effect.gen(function* () {
+      const TestLayer = makeTestLayer();
+      await Effect.runPromise(
+        Effect.gen(function* (_) {
           const planRepo = yield* PlanRepositoryPort;
           const dayRepo = yield* DayRepositoryPort;
           const plan = yield* planRepo.createPlan({ slug: "del-day", title: "Del", description: "" });
@@ -93,13 +94,14 @@ describe("DayRepository Contract", () => {
           yield* dayRepo.deleteDay(day.id);
           const days = yield* dayRepo.listDaysByPlanId(plan.id);
           expect(days).toHaveLength(0);
-        })
+        }).pipe(Effect.provide(TestLayer))
       );
     });
 
     it("should reorder days", async () => {
-      await runWithFakes(
-        Effect.gen(function* () {
+      const TestLayer = makeTestLayer();
+      await Effect.runPromise(
+        Effect.gen(function* (_) {
           const planRepo = yield* PlanRepositoryPort;
           const dayRepo = yield* DayRepositoryPort;
           const plan = yield* planRepo.createPlan({ slug: "reorder-days", title: "Reorder", description: "" });
@@ -113,7 +115,7 @@ describe("DayRepository Contract", () => {
           const d2 = yield* dayRepo.getDayById(day2.id);
           expect(d1.dayNumber).toBe(2);
           expect(d2.dayNumber).toBe(1);
-        })
+        }).pipe(Effect.provide(TestLayer))
       );
     });
   });

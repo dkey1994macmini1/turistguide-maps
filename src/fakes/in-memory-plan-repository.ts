@@ -1,8 +1,8 @@
 import { Effect, Layer } from "effect";
-import { PlanRepositoryPort, type PlanRepository } from "../core/ports/plan-repository-port";
-import { RepositoryError } from "../core/errors";
-import { PlanId, Slug } from "../core/branded";
-import type { Plan, PlanCreateInput, PlanUpdateInput } from "../core/plan";
+import { PlanRepositoryPort, type PlanRepository } from "@/core/ports/plan-repository-port";
+import { RepositoryError } from "@/core/errors";
+import { PlanId, Slug } from "@/core/branded";
+import type { Plan, PlanCreateInput, PlanUpdateInput } from "@/core/plan";
 
 const makeFakePlanRepository = (): PlanRepository => {
   const store = new Map<string, Plan>();
@@ -16,38 +16,33 @@ const makeFakePlanRepository = (): PlanRepository => {
         const plan: Plan = { id, slug, title: input.title, description: input.description, createdAt: now, updatedAt: now };
         store.set(plan.id, plan);
         return plan;
-      }),
+      }) as Effect.Effect<Plan, RepositoryError>,
 
     getPlanById: (id: string) =>
       Effect.gen(function* () {
         const plan = store.get(id);
-        if (!plan) yield* Effect.fail(RepositoryError.notFound(id));
-        return plan!;
-      }),
+        if (!plan) return yield* Effect.fail(RepositoryError.notFound(id));
+        return plan;
+      }) as Effect.Effect<Plan, RepositoryError>,
 
     getPlanBySlug: (slug: string) =>
       Effect.gen(function* () {
-        let found: Plan | undefined;
         for (const plan of store.values()) {
-          if (plan.slug === slug) {
-            found = plan;
-            break;
-          }
+          if (plan.slug === slug) return plan;
         }
-        if (!found) yield* Effect.fail(RepositoryError.notFound(slug));
-        return found;
-      }),
+        return yield* Effect.fail(RepositoryError.notFound(slug));
+      }) as Effect.Effect<Plan, RepositoryError>,
 
     listPlans: Effect.gen(function* () {
       return Array.from(store.values()).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-    }),
+    }) as Effect.Effect<Plan[], RepositoryError>,
 
     updatePlan: (id: string, input: PlanUpdateInput) =>
       Effect.gen(function* () {
         const existing = store.get(id);
-        if (!existing) yield* Effect.fail(RepositoryError.notFound(id));
+        if (!existing) return yield* Effect.fail(RepositoryError.notFound(id));
         const updated: Plan = {
-          ...existing!,
+          ...existing,
           ...(input.slug !== undefined && { slug: Slug(input.slug) }),
           ...(input.title !== undefined && { title: input.title }),
           ...(input.description !== undefined && { description: input.description }),
@@ -55,16 +50,18 @@ const makeFakePlanRepository = (): PlanRepository => {
         };
         store.set(id, updated);
         return updated;
-      }),
+      }) as Effect.Effect<Plan, RepositoryError>,
 
     deletePlan: (id: string) =>
       Effect.gen(function* () {
         store.delete(id);
-      }),
+      }) as Effect.Effect<void, RepositoryError>,
   };
 };
 
-export const InMemoryPlanRepositoryLive = Layer.succeed(
-  PlanRepositoryPort,
-  PlanRepositoryPort.of(makeFakePlanRepository())
-);
+// Factory for test isolation — creates a fresh Layer with fresh state each time
+export const makeInMemoryPlanRepositoryLayer = () =>
+  Layer.succeed(PlanRepositoryPort, PlanRepositoryPort.of(makeFakePlanRepository()));
+
+// Singleton for production wiring (shared state)
+export const InMemoryPlanRepositoryLive = makeInMemoryPlanRepositoryLayer();
