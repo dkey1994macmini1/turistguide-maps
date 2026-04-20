@@ -70,5 +70,39 @@ describe("ReadModel Contract", () => {
       );
       expect(result.days).toHaveLength(0);
     });
+
+    it("should return googleMapsUrl for each stop", async () => {
+      const TestLayer = makeTestLayer();
+      const result = await Effect.runPromise(
+        Effect.gen(function* (_) {
+          const planRepo = yield* PlanRepositoryPort;
+          const dayRepo = yield* DayRepositoryPort;
+          const stopRepo = yield* StopRepositoryPort;
+          const readModel = yield* ReadModelPort;
+          const plan = yield* planRepo.createPlan({ slug: "maps-test", title: "Maps", description: "" });
+          const day1 = yield* dayRepo.createDay({ planId: plan.id, dayNumber: 1 });
+          yield* stopRepo.createStop({ dayId: day1.id, title: "Diamond Head", description: "", lat: 21.2728, lng: -157.8081, sortOrder: 1 });
+          return yield* readModel.getPlanReadModelBySlug("maps-test");
+        }).pipe(Effect.provide(TestLayer))
+      );
+      const stop = result.days[0].stops[0];
+      expect(stop.googleMapsUrl).toBe("https://www.google.com/maps/search/?api=1&query=21.2728,-157.8081");
+    });
+
+    it("should list plan slugs", async () => {
+      const TestLayer = makeTestLayer();
+      const result = await Effect.runPromise(
+        Effect.gen(function* (_) {
+          const planRepo = yield* PlanRepositoryPort;
+          const readModel = yield* ReadModelPort;
+          yield* planRepo.createPlan({ slug: "paris", title: "Paris Trip", description: "" });
+          yield* planRepo.createPlan({ slug: "tokyo", title: "Tokyo Trip", description: "" });
+          return yield* readModel.listPlanSlugs;
+        }).pipe(Effect.provide(TestLayer))
+      );
+      expect(result).toHaveLength(2);
+      expect(result[0].slug).toBe("paris");
+      expect(result[1].slug).toBe("tokyo");
+    });
   });
 });

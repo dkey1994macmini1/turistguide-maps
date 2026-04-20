@@ -2,7 +2,7 @@
 // Returns full plan with nested days and stops
 
 import { Effect, Layer } from "effect";
-import { ReadModelPort, type ReadModel, type PlanReadModel } from "../../core/ports/read-model-port";
+import { ReadModelPort, type ReadModel, type PlanReadModel, type StopReadModel, googleMapsUrl } from "../../core/ports/read-model-port";
 import { RepositoryError } from "../../core/errors";
 import { PlanId, DayId, StopId, Slug } from "../../core/branded";
 import type { Plan } from "../../core/plan";
@@ -23,6 +23,12 @@ const toStop = (row: typeof stops.$inferSelect): Stop => ({
   lng: row.lng,
   sortOrder: row.sortOrder,
   links: (row.links ?? []) as ReadonlyArray<StopLink>,
+});
+
+/** Convert a Stop to StopReadModel with computed googleMapsUrl */
+const toStopReadModel = (stop: Stop): StopReadModel => ({
+  ...stop,
+  googleMapsUrl: googleMapsUrl(stop.lat, stop.lng),
 });
 
 /** Convert a day DAO row to domain Day */
@@ -56,11 +62,19 @@ const buildReadModel = (
     stops: stopRows
       .filter((s) => s.dayId === dayRow.id)
       .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map(toStop),
+      .map((row) => toStopReadModel(toStop(row))),
   })),
 });
 
 const makePostgresReadModel = (db: DbClient): ReadModel => ({
+  listPlanSlugs: Effect.tryPromise({
+    try: async () => {
+      const rows = await db.select({ slug: plans.slug, title: plans.title }).from(plans);
+      return rows;
+    },
+    catch: (error): RepositoryError => RepositoryError.from(error),
+  }),
+
   getPlanReadModelBySlug: (slug: string) =>
     Effect.tryPromise({
       try: async () => {

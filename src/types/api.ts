@@ -26,6 +26,7 @@ export type StopItem = {
   lng: number;
   sortOrder: number;
   links: ReadonlyArray<{ label: string; url: string }>;
+  googleMapsUrl: string;
 };
 
 export type DayWithStops = DayItem & {

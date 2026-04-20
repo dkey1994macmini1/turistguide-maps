@@ -18,6 +18,7 @@ const baseStop: StopItem = {
     { label: "AllTrails", url: "https://alltrails.com/diamond-head" },
     { label: "NPS", url: "https://nps.gov/diamond-head" },
   ],
+  googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=21.2724,-157.8081",
 };
 
 describe("StopDetail", () => {
@@ -39,10 +40,12 @@ describe("StopDetail", () => {
     expect(npsLink).toHaveAttribute("href", "https://nps.gov/diamond-head");
   });
 
-  it("renders coordinates", () => {
+  it("renders coordinates as Google Maps link", () => {
     render(<StopDetail stop={baseStop} onClose={() => {}} />);
 
-    expect(screen.getByText("21.2724, -157.8081")).toBeInTheDocument();
+    const gmapsLink = screen.getByText("📍 Google Maps");
+    expect(gmapsLink).toHaveAttribute("href", "https://www.google.com/maps/search/?api=1&query=21.2724,-157.8081");
+    expect(gmapsLink).toHaveAttribute("target", "_blank");
   });
 
   it("calls onClose when close button clicked", () => {

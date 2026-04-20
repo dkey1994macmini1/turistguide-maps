@@ -36,6 +36,7 @@ function serializeReadModel(plan: DomainPlanReadModel) {
         lng: stop.lng,
         sortOrder: stop.sortOrder,
         links: stop.links.map((l) => ({ label: l.label, url: l.url })),
+        googleMapsUrl: stop.googleMapsUrl,
       })),
     })),
   };

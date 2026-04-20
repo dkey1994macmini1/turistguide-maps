@@ -30,6 +30,14 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
           ))}
         </div>
       )}
+      <a
+        href={stop.googleMapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="stop-detail-link"
+      >
+        📍 Google Maps
+      </a>
     </div>
   );
 }

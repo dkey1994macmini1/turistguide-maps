@@ -1,5 +1,5 @@
 import { Effect, Layer } from "effect";
-import { ReadModelPort, type ReadModel, type PlanReadModel } from "@/core/ports/read-model-port";
+import { ReadModelPort, type ReadModel, type PlanReadModel, type StopReadModel, googleMapsUrl } from "@/core/ports/read-model-port";
 import { PlanRepositoryPort } from "@/core/ports/plan-repository-port";
 import { DayRepositoryPort } from "@/core/ports/day-repository-port";
 import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
@@ -10,19 +10,30 @@ import { makeInMemoryPlanRepositoryLayer } from "./in-memory-plan-repository";
 import { makeInMemoryDayRepositoryLayer } from "./in-memory-day-repository";
 import { makeInMemoryStopRepositoryLayer } from "./in-memory-stop-repository";
 
+/** Convert Stop to StopReadModel with computed googleMapsUrl */
+const toStopReadModel = (stop: Stop): StopReadModel => ({
+  ...stop,
+  googleMapsUrl: googleMapsUrl(stop.lat, stop.lng),
+});
+
 const makeInMemoryReadModel = (
   planRepo: typeof PlanRepositoryPort.Service,
   dayRepo: typeof DayRepositoryPort.Service,
   stopRepo: typeof StopRepositoryPort.Service,
 ): ReadModel => ({
+  listPlanSlugs: Effect.gen(function* () {
+    const plans = yield* planRepo.listPlans;
+    return plans.map((p) => ({ slug: p.slug, title: p.title }));
+  }) as Effect.Effect<Array<{ slug: string; title: string }>, RepositoryError>,
+
   getPlanReadModelBySlug: (slug: string) =>
     Effect.gen(function* () {
       const plan = yield* planRepo.getPlanBySlug(slug);
       const days = yield* dayRepo.listDaysByPlanId(plan.id);
-      const daysWithStops: Array<Day & { stops: Stop[] }> = yield* Effect.forEach(days, (day) =>
+      const daysWithStops: Array<Day & { stops: StopReadModel[] }> = yield* Effect.forEach(days, (day) =>
         Effect.gen(function* () {
           const stops = yield* stopRepo.listStopsByDayId(day.id);
-          return { ...day, stops: [...stops] };
+          return { ...day, stops: stops.map(toStopReadModel) };
         })
       );
       return { ...plan, days: daysWithStops } as PlanReadModel;
@@ -32,10 +43,10 @@ const makeInMemoryReadModel = (
     Effect.gen(function* () {
       const plan = yield* planRepo.getPlanById(id);
       const days = yield* dayRepo.listDaysByPlanId(plan.id);
-      const daysWithStops: Array<Day & { stops: Stop[] }> = yield* Effect.forEach(days, (day) =>
+      const daysWithStops: Array<Day & { stops: StopReadModel[] }> = yield* Effect.forEach(days, (day) =>
         Effect.gen(function* () {
           const stops = yield* stopRepo.listStopsByDayId(day.id);
-          return { ...day, stops: [...stops] };
+          return { ...day, stops: stops.map(toStopReadModel) };
         })
       );
       return { ...plan, days: daysWithStops } as PlanReadModel;
