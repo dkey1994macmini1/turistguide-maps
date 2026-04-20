@@ -6,7 +6,7 @@ import { RepositoryError } from "../../core/errors";
 import { StopId, DayId } from "../../core/branded";
 import type { Stop, StopCreateInput, StopUpdateInput } from "../../core/stop";
 import type { StopLink } from "../../core/stop-link";
-import { stops, type StopDAO, type StopInsertDAO } from "./schema";
+import { stops, type StopDAO, type StopInsertDAO } from "@/common/db/schema";
 import { eq } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
 

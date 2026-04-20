@@ -5,13 +5,10 @@ import {
   validateLongitude,
   validateCoordinates,
   validateUrl,
-  validateSlug,
-} from "../validation";
-import type {
-  CoordinateValidationError,
-  UrlValidationError,
-  SlugValidationError,
-} from "../errors";
+} from "@/features/stop/stop.validation";
+import { validateSlug } from "@/features/plan/plan.validation";
+import type { CoordinateValidationError, UrlValidationError } from "@/features/stop/stop.errors";
+import type { SlugValidationError } from "@/features/plan/plan.errors";
 
 // --- Coordinate Validation ---
 

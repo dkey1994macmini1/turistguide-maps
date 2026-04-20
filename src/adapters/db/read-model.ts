@@ -9,7 +9,7 @@ import type { Plan } from "../../core/plan";
 import type { Day } from "../../core/day";
 import type { Stop } from "../../core/stop";
 import type { StopLink } from "../../core/stop-link";
-import { plans, days, stops } from "./schema";
+import { plans, days, stops } from "@/common/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
 

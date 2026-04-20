@@ -5,7 +5,7 @@ import { PlanRepositoryPort, type PlanRepository } from "../../core/ports/plan-r
 import { RepositoryError } from "../../core/errors";
 import { PlanId, Slug } from "../../core/branded";
 import type { Plan, PlanCreateInput, PlanUpdateInput } from "../../core/plan";
-import { plans, type PlanDAO, type PlanInsertDAO } from "./schema";
+import { plans, type PlanDAO, type PlanInsertDAO } from "@/common/db/schema";
 import { eq } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
 

@@ -5,7 +5,7 @@ import { DayRepositoryPort, type DayRepository } from "../../core/ports/day-repo
 import { RepositoryError } from "../../core/errors";
 import { DayId, PlanId } from "../../core/branded";
 import type { Day, DayCreateInput, DayUpdateInput } from "../../core/day";
-import { days, type DayDAO, type DayInsertDAO } from "./schema";
+import { days, type DayDAO, type DayInsertDAO } from "@/common/db/schema";
 import { eq } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
 
