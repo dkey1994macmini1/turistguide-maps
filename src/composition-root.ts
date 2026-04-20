@@ -1,5 +1,5 @@
 // Composition Root — wires all layers for the application
-// Production: Postgres layers, Development: In-memory layers
+// Single PostgreSQL layer (no dev/prod split)
 
 import { Layer, Effect } from "effect";
 import { DbClientLive, createDbClient } from "@/adapters/db/client";
@@ -7,7 +7,6 @@ import { PostgresPlanRepositoryLive } from "@/adapters/db/plan-repository";
 import { PostgresDayRepositoryLive } from "@/adapters/db/day-repository";
 import { PostgresStopRepositoryLive } from "@/adapters/db/stop-repository";
 import { PostgresReadModelLive } from "@/adapters/db/read-model";
-import { makeInMemoryFullLayer } from "@/fakes/in-memory-read-model";
 
 // Create the DB client layer from DATABASE_URL
 const DbClientLayer = Layer.effect(
@@ -20,7 +19,7 @@ const DbClientLayer = Layer.effect(
   })
 );
 
-// Production layer: Postgres implementations
+// Postgres implementations
 const RepoLayer = Layer.merge(
   Layer.merge(
     PostgresPlanRepositoryLive,
@@ -32,7 +31,4 @@ const RepoLayer = Layer.merge(
   ),
 );
 
-export const ProductionLayer = RepoLayer.pipe(Layer.provide(DbClientLayer));
-
-// Development layer: In-memory implementations (no DB needed)
-export const DevelopmentLayer = makeInMemoryFullLayer();
+export const AppLayer = RepoLayer.pipe(Layer.provide(DbClientLayer));
