@@ -6,31 +6,10 @@ import { RepositoryError } from "../../core/errors";
 import { StopId, DayId } from "../../core/branded";
 import type { Stop, StopCreateInput, StopUpdateInput } from "../../core/stop";
 import type { DurationRange, CostInfo } from "../../core/stop-types";
-import type { StopLink } from "../../core/stop-link";
 import { stops, type StopDAO, type StopInsertDAO } from "@/common/db/schema";
 import { eq } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
-
-/** Convert a DAO row to domain Stop */
-const toStop = (row: StopDAO): Stop => ({
-  id: StopId(row.id),
-  dayId: DayId(row.dayId),
-  title: row.title,
-  summary: row.summary,
-  description: row.description,
-  lat: row.lat,
-  lng: row.lng,
-  sortOrder: row.sortOrder,
-  links: (row.links ?? []) as ReadonlyArray<StopLink>,
-  duration: (row.duration as import("../../core/stop-types").DurationRange) ?? null,
-  cost: (row.cost as import("../../core/stop-types").CostInfo) ?? null,
-  reservation: row.reservation ?? null,
-  bring: (row.bring ?? []) as ReadonlyArray<string>,
-  bestTime: row.bestTime ?? null,
-  warnings: (row.warnings ?? []) as ReadonlyArray<string>,
-  alternative: row.alternative ?? null,
-  audioUrl: row.audioUrl ?? null,
-});
+import { toStop } from "./mappers";
 
 const makePostgresStopRepository = (db: DbClient): StopRepository => ({
   createStop: (input: StopCreateInput) =>
