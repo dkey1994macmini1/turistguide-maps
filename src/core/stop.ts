@@ -22,6 +22,7 @@ export type Stop = {
   readonly bestTime: string | null;
   readonly warnings: ReadonlyArray<string>;
   readonly alternative: string | null;
+  readonly audioUrl: string | null;
 };
 
 export type StopCreateInput = {
@@ -40,6 +41,7 @@ export type StopCreateInput = {
   readonly bestTime?: string | null;
   readonly warnings?: ReadonlyArray<string>;
   readonly alternative?: string | null;
+  readonly audioUrl?: string | null;
 };
 
 export type StopUpdateInput = {
@@ -57,4 +59,5 @@ export type StopUpdateInput = {
   readonly bestTime?: string | null;
   readonly warnings?: ReadonlyArray<string>;
   readonly alternative?: string | null;
+  readonly audioUrl?: string | null;
 };

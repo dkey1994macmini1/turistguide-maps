@@ -35,6 +35,7 @@ export type StopItem = {
   bestTime: string | null;
   warnings: ReadonlyArray<string>;
   alternative: string | null;
+  audioUrl: string | null;
 };
 
 export type DayWithStops = DayItem & {

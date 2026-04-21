@@ -24,6 +24,7 @@ export const stops = pgTable(
     bestTime: text("best_time"),
     warnings: jsonb("warnings").$type<readonly string[]>().default([]),
     alternative: text("alternative"),
+    audioUrl: text("audio_url"),
   },
   (table) => [index("idx_stops_day_id").on(table.dayId)],
 );

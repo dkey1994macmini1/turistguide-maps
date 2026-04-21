@@ -31,6 +31,7 @@ const toStop = (row: typeof stops.$inferSelect): Stop => ({
   bestTime: row.bestTime ?? null,
   warnings: (row.warnings ?? []) as ReadonlyArray<string>,
   alternative: row.alternative ?? null,
+  audioUrl: row.audioUrl ?? null,
 });
 
 /** Convert a Stop to StopReadModel with computed googleMapsUrl */

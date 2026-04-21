@@ -28,6 +28,7 @@ const makeFakeStopRepository = (): StopRepository => {
           bestTime: input.bestTime ?? null,
           warnings: input.warnings ?? [],
           alternative: input.alternative ?? null,
+          audioUrl: input.audioUrl ?? null,
         };
         store.set(stop.id, stop);
         return stop;
@@ -65,6 +66,7 @@ const makeFakeStopRepository = (): StopRepository => {
           ...(input.bestTime !== undefined && { bestTime: input.bestTime }),
           ...(input.warnings !== undefined && { warnings: input.warnings }),
           ...(input.alternative !== undefined && { alternative: input.alternative }),
+          ...(input.audioUrl !== undefined && { audioUrl: input.audioUrl }),
         };
         store.set(id, updated);
         return updated;

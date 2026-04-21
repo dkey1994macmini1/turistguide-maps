@@ -29,6 +29,7 @@ const toStop = (row: StopDAO): Stop => ({
   bestTime: row.bestTime ?? null,
   warnings: (row.warnings ?? []) as ReadonlyArray<string>,
   alternative: row.alternative ?? null,
+  audioUrl: row.audioUrl ?? null,
 });
 
 const makePostgresStopRepository = (db: DbClient): StopRepository => ({
@@ -53,6 +54,7 @@ const makePostgresStopRepository = (db: DbClient): StopRepository => ({
           bestTime: input.bestTime ?? null,
           warnings: input.warnings ?? [],
           alternative: input.alternative ?? null,
+          audioUrl: input.audioUrl ?? null,
         };
         const [row] = await db.insert(stops).values(insertData).returning();
         return toStop(row);
@@ -101,6 +103,7 @@ const makePostgresStopRepository = (db: DbClient): StopRepository => ({
           ...(input.bestTime !== undefined && { bestTime: input.bestTime as string | null }),
           ...(input.warnings !== undefined && { warnings: [...(input.warnings ?? [])] }),
           ...(input.alternative !== undefined && { alternative: input.alternative as string | null }),
+          ...(input.audioUrl !== undefined && { audioUrl: input.audioUrl as string | null }),
         };
         const [row] = await db.update(stops).set(updateData).where(eq(stops.id, id)).returning();
         if (!row) throw { _tag: "NotFoundError" as const, id };

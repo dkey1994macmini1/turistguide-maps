@@ -22,6 +22,37 @@ function hasStructuredData(stop: StopItem): boolean {
 
 export function StopDetail({ stop, onClose }: StopDetailProps) {
   const [expanded, setExpanded] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(stop.audioUrl);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/stops/${stop.id}/audio`, { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setAudioUrl(data.audioUrl);
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteAudio = async () => {
+    setUploading(true);
+    try {
+      const res = await fetch(`/api/stops/${stop.id}/audio`, { method: "DELETE" });
+      if (res.ok) {
+        setAudioUrl(null);
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className="stop-detail">
@@ -92,6 +123,45 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
           )}
         </div>
       )}
+
+      {/* Audio player + upload */}
+      <div className="stop-detail-audio">
+        {audioUrl ? (
+          <div className="stop-audio-player">
+            <audio controls src={audioUrl} className="stop-audio-element" />
+            <button
+              className="stop-audio-delete"
+              onClick={handleDeleteAudio}
+              disabled={uploading}
+              title="Usuń audio"
+            >
+              🗑
+            </button>
+            <label className="stop-audio-replace" title="Zastąp plik audio">
+              🔄
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={handleUpload}
+                disabled={uploading}
+                style={{ display: "none" }}
+              />
+            </label>
+          </div>
+        ) : (
+          <label className="stop-audio-upload">
+            🎤 Dodaj audio
+            <input
+              type="file"
+              accept="audio/*"
+              onChange={handleUpload}
+              disabled={uploading}
+              style={{ display: "none" }}
+            />
+          </label>
+        )}
+        {uploading && <span className="stop-audio-status">Przesyłanie…</span>}
+      </div>
 
       {/* Description — TTS narrative, collapsed by default */}
       {stop.description && (
