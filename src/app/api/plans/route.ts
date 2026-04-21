@@ -3,17 +3,7 @@ import { Effect } from "effect";
 import { PlanRepositoryPort } from "@/core/ports/plan-repository-port";
 import { AppLayer } from "@/composition-root";
 import { validateSlug } from "@/core/validation";
-import type { Plan } from "@/core/plan";
-function serializePlan(p: Plan) {
-  return {
-    id: p.id,
-    slug: p.slug,
-    title: p.title,
-    description: p.description,
-    createdAt: p.createdAt.toISOString(),
-    updatedAt: p.updatedAt.toISOString(),
-  };
-}
+import { serializePlan } from "../serializers";
 
 // GET /api/plans — list all plans
 export async function GET() {
