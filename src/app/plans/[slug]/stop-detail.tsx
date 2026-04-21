@@ -209,7 +209,7 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
             <p className="stop-tts-confirm-text">
               {audioUrl
                 ? "Regenerować audio z opisu? Istniejący plik zostanie zastąpiony."
-                : "Generować audio z opisu? Użyje Fish AI (~$0.03)."}
+                : "Generować audio z opisu?"}
             </p>
             <div className="stop-tts-confirm-buttons">
               <button className="stop-tts-confirm-yes" onClick={handleGenerateTts}>
