@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { readFile, stat } from "fs/promises";
-import { join } from "path";
 import { existsSync } from "fs";
+import { AUDIO_DIR } from "@/app/api/stops/[stopId]/audio-constants";
 
-const AUDIO_DIR = join(process.cwd(), "storage", "audio", "stops");
 const POSSIBLE_EXTS = ["mp3", "ogg", "wav", "m4a", "webm"];
 const CONTENT_TYPES: Record<string, string> = {
   mp3: "audio/mpeg",
