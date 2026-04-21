@@ -24,6 +24,9 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [audioUrl, setAudioUrl] = useState(stop.audioUrl);
+  const [generating, setGenerating] = useState(false);
+  const [showTtsConfirm, setShowTtsConfirm] = useState(false);
+  const [ttsError, setTtsError] = useState<string | null>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,6 +54,26 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
       }
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleGenerateTts = async () => {
+    setShowTtsConfirm(false);
+    setGenerating(true);
+    setTtsError(null);
+    try {
+      const res = await fetch(`/api/stops/${stop.id}/tts`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setAudioUrl(data.audioUrl);
+      } else {
+        const err = await res.json();
+        setTtsError(err.error || "Generowanie nie powiodło się");
+      }
+    } catch {
+      setTtsError("Błąd połączenia z serwerem TTS");
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -124,7 +147,7 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
         </div>
       )}
 
-      {/* Audio player + upload */}
+      {/* Audio player + generate + upload */}
       <div className="stop-detail-audio">
         {audioUrl ? (
           <div className="stop-audio-player">
@@ -132,35 +155,76 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
             <button
               className="stop-audio-delete"
               onClick={handleDeleteAudio}
-              disabled={uploading}
+              disabled={uploading || generating}
               title="Usuń audio"
             >
               🗑
             </button>
+            <button
+              className="stop-audio-regenerate"
+              onClick={() => { setTtsError(null); setShowTtsConfirm(true); }}
+              disabled={uploading || generating}
+              title="Regeneruj audio (TTS)"
+            >
+              🔊
+            </button>
             <label className="stop-audio-replace" title="Zastąp plik audio">
-              🔄
+              📂
               <input
                 type="file"
                 accept="audio/*"
                 onChange={handleUpload}
-                disabled={uploading}
+                disabled={uploading || generating}
                 style={{ display: "none" }}
               />
             </label>
           </div>
         ) : (
-          <label className="stop-audio-upload">
-            🎤 Dodaj audio
-            <input
-              type="file"
-              accept="audio/*"
-              onChange={handleUpload}
-              disabled={uploading}
-              style={{ display: "none" }}
-            />
-          </label>
+          <div className="stop-audio-actions">
+            {stop.description && (
+              <button
+                className="stop-audio-generate"
+                onClick={() => { setTtsError(null); setShowTtsConfirm(true); }}
+                disabled={generating}
+              >
+                🔊 Generuj audio
+              </button>
+            )}
+            <label className="stop-audio-upload">
+              🎤 Dodaj plik
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={handleUpload}
+                disabled={uploading || generating}
+                style={{ display: "none" }}
+              />
+            </label>
+          </div>
         )}
+
+        {/* TTS confirm dialog */}
+        {showTtsConfirm && (
+          <div className="stop-tts-confirm">
+            <p className="stop-tts-confirm-text">
+              {audioUrl
+                ? "Regenerować audio z opisu? Istniejący plik zostanie zastąpiony."
+                : "Generować audio z opisu? Użyje Fish AI (~$0.03)."}
+            </p>
+            <div className="stop-tts-confirm-buttons">
+              <button className="stop-tts-confirm-yes" onClick={handleGenerateTts}>
+                Tak, generuj
+              </button>
+              <button className="stop-tts-confirm-no" onClick={() => setShowTtsConfirm(false)}>
+                Anuluj
+              </button>
+            </div>
+          </div>
+        )}
+
+        {generating && <span className="stop-audio-status">🔊 Generowanie audio…</span>}
         {uploading && <span className="stop-audio-status">Przesyłanie…</span>}
+        {ttsError && <span className="stop-audio-error">{ttsError}</span>}
       </div>
 
       {/* Description — TTS narrative, collapsed by default */}

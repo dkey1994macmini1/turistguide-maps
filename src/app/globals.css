@@ -603,6 +603,51 @@ button {
   border-radius: 8px;
 }
 
+.stop-audio-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stop-audio-generate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.stop-audio-generate:hover {
+  background: var(--color-accent);
+}
+
+.stop-audio-generate:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stop-audio-regenerate {
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.stop-audio-regenerate:hover {
+  background: var(--color-primary-bg);
+}
+
 .stop-audio-delete,
 .stop-audio-replace {
   cursor: pointer;
@@ -640,8 +685,66 @@ button {
 
 .stop-audio-status {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-left: 8px;
+}
+
+.stop-audio-error {
+  font-size: 0.75rem;
+  color: var(--color-danger);
+  margin-top: 4px;
+}
+
+.stop-tts-confirm {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--color-primary-bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-primary-light);
+}
+
+.stop-tts-confirm-text {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.stop-tts-confirm-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.stop-tts-confirm-yes {
+  padding: 5px 14px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.stop-tts-confirm-yes:hover {
+  background: var(--color-accent);
+}
+
+.stop-tts-confirm-no {
+  padding: 5px 14px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.stop-tts-confirm-no:hover {
+  background: var(--color-border);
 }
 
 /* ═══════════════════════ Desktop ═══════════════════════ */
