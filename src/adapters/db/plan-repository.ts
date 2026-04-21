@@ -8,16 +8,7 @@ import type { Plan, PlanCreateInput, PlanUpdateInput } from "../../core/plan";
 import { plans, type PlanDAO, type PlanInsertDAO } from "@/common/db/schema";
 import { eq } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
-
-/** Convert a DAO row to a domain Plan */
-const toPlan = (row: PlanDAO): Plan => ({
-  id: PlanId(row.id),
-  slug: Slug(row.slug),
-  title: row.title,
-  description: row.description,
-  createdAt: row.createdAt,
-  updatedAt: row.updatedAt,
-});
+import { toPlan } from "./mappers";
 
 const makePostgresPlanRepository = (db: DbClient): PlanRepository => ({
   createPlan: (input: PlanCreateInput) =>

@@ -8,15 +8,7 @@ import type { Day, DayCreateInput, DayUpdateInput } from "../../core/day";
 import { days, type DayDAO, type DayInsertDAO } from "@/common/db/schema";
 import { eq } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
-
-/** Convert a DAO row to domain Day */
-const toDay = (row: DayDAO): Day => ({
-  id: DayId(row.id),
-  planId: PlanId(row.planId),
-  dayNumber: row.dayNumber,
-  title: row.title,
-  description: row.description,
-});
+import { toDay } from "./mappers";
 
 const makePostgresDayRepository = (db: DbClient): DayRepository => ({
   createDay: (input: DayCreateInput) =>
