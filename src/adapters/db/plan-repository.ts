@@ -4,7 +4,7 @@ import { Effect, Layer } from "effect";
 import { PlanRepositoryPort, type PlanRepository } from "../../core/ports/plan-repository-port";
 import { RepositoryError } from "../../core/errors";
 import { PlanId, Slug } from "../../core/branded";
-import type { Plan, PlanCreateInput, PlanUpdateInput } from "../../core/plan";
+import type { PlanCreateInput, PlanUpdateInput } from "../../core/plan";
 import { plans, type PlanDAO, type PlanInsertDAO } from "@/common/db/schema";
 import { eq } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
