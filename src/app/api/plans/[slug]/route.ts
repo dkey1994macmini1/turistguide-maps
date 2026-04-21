@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { ReadModelPort } from "@/core/ports/read-model-port";
 import { PlanRepositoryPort } from "@/core/ports/plan-repository-port";
 import { AppLayer } from "@/composition-root";
-import { serializePlan, serializeReadModel } from "../../serializers";
+import { serializeReadModel } from "../../serializers";
 
 // GET /api/plans/[slug] — full plan read model by slug
 export async function GET(
