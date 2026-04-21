@@ -107,6 +107,7 @@ const stopSchema = z.object({
   bestTime: z.string().optional().describe("Best time to visit, e.g. 'Early morning to avoid crowds'"),
   warnings: z.array(z.string()).optional().default([]).describe("Warnings, e.g. ['Steep climb', 'No shade']"),
   alternative: z.string().optional().describe("Alternative if this stop doesn't work out"),
+  audioUrl: z.string().nullable().optional().describe("Audio file URL (e.g. /api/audio/stops/stop-id). Preserve existing value unless intentionally changing audio. Pass null to clear."),
 });
 
 // ── Tool 1: list_itineraries ────────────────────────────────────────
@@ -284,6 +285,7 @@ server.registerTool(
                 bestTime: s.bestTime ?? null,
                 warnings: s.warnings ?? [],
                 alternative: s.alternative ?? null,
+                audioUrl: s.audioUrl ?? undefined,
               });
               createdStops.push(updated);
             } else {
@@ -305,6 +307,7 @@ server.registerTool(
                   bestTime: s.bestTime ?? null,
                   warnings: s.warnings ?? [],
                   alternative: s.alternative ?? null,
+                  audioUrl: s.audioUrl ?? null,
                 }),
               );
             }
@@ -339,6 +342,7 @@ server.registerTool(
               bestTime: s.bestTime ?? null,
               warnings: s.warnings ?? [],
               alternative: s.alternative ?? null,
+              audioUrl: s.audioUrl ?? null,
             }),
           );
         }
@@ -468,9 +472,10 @@ server.registerTool(
       bestTime: z.string().optional().describe("Best time to visit, e.g. 'Early morning to avoid crowds'"),
       warnings: z.array(z.string()).optional().default([]).describe("Warnings, e.g. ['Steep climb', 'No shade']"),
       alternative: z.string().optional().describe("Alternative if this stop doesn't work out"),
+      audioUrl: z.string().nullable().optional().describe("Audio file URL (e.g. /api/audio/stops/stop-id). Preserve existing value unless intentionally changing audio. Pass null to clear."),
     },
   },
-  async ({ planSlug, dayNumber, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative }) => {
+  async ({ planSlug, dayNumber, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl }) => {
     try {
       const stop = await runEffect(
         Effect.gen(function* () {
@@ -498,6 +503,7 @@ server.registerTool(
             bestTime: bestTime ?? null,
             warnings: warnings ?? [],
             alternative: alternative ?? null,
+            audioUrl: audioUrl ?? null,
           });
           return { ...newStop, googleMapsUrl: googleMapsUrl(lat, lng) };
         }),
@@ -608,9 +614,10 @@ server.registerTool(
         .nullable()
         .optional()
         .describe("Alternative if this stop doesn't work out. Pass null to clear."),
+      audioUrl: z.string().nullable().optional().describe("Audio file URL. Preserve existing value unless intentionally changing audio. Pass null to clear."),
     },
   },
-  async ({ planSlug, dayNumber, stopIndex, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative }) => {
+  async ({ planSlug, dayNumber, stopIndex, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl }) => {
     const result = await runEffectSafe(
       Effect.gen(function* () {
         const rm = yield* ReadModelPort;
@@ -637,6 +644,7 @@ server.registerTool(
         if (bestTime !== undefined) update.bestTime = bestTime;
         if (warnings !== undefined) update.warnings = warnings;
         if (alternative !== undefined) update.alternative = alternative;
+        if (audioUrl !== undefined) update.audioUrl = audioUrl;
 
         const updated = yield* stopRepo.updateStop(stop.id, update);
         return { ...updated, googleMapsUrl: googleMapsUrl(updated.lat, updated.lng) };
