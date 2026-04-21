@@ -41,14 +41,14 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
           {stop.duration && (
             <div className="stop-meta-row">
               <span className="stop-meta-icon">⏱</span>
-              <span className="stop-meta-label">Time</span>
+              <span className="stop-meta-label">Czas</span>
               <span className="stop-meta-value">{stop.duration.min}–{stop.duration.max} min</span>
             </div>
           )}
           {stop.cost && (
             <div className="stop-meta-row">
               <span className="stop-meta-icon">💰</span>
-              <span className="stop-meta-label">Cost</span>
+              <span className="stop-meta-label">Koszt</span>
               <span className="stop-meta-value">
                 {stop.cost.amount} {stop.cost.currency}
                 {stop.cost.note ? ` · ${stop.cost.note}` : ""}
@@ -58,35 +58,35 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
           {stop.reservation && (
             <div className="stop-meta-row">
               <span className="stop-meta-icon">🎫</span>
-              <span className="stop-meta-label">Booking</span>
+              <span className="stop-meta-label">Rezerwacja</span>
               <span className="stop-meta-value">{stop.reservation}</span>
             </div>
           )}
           {stop.bring.length > 0 && (
             <div className="stop-meta-row">
               <span className="stop-meta-icon">🎒</span>
-              <span className="stop-meta-label">Bring</span>
+              <span className="stop-meta-label">Zabierz</span>
               <span className="stop-meta-value">{stop.bring.join(", ")}</span>
             </div>
           )}
           {stop.bestTime && (
             <div className="stop-meta-row">
               <span className="stop-meta-icon">🌤</span>
-              <span className="stop-meta-label">Best time</span>
+              <span className="stop-meta-label">Najlepszy czas</span>
               <span className="stop-meta-value">{stop.bestTime}</span>
             </div>
           )}
           {stop.warnings.length > 0 && (
             <div className="stop-meta-row stop-meta-warning">
               <span className="stop-meta-icon">⚠️</span>
-              <span className="stop-meta-label">Warnings</span>
+              <span className="stop-meta-label">Ostrzeżenia</span>
               <span className="stop-meta-value">{stop.warnings.join(" · ")}</span>
             </div>
           )}
           {stop.alternative && (
             <div className="stop-meta-row">
               <span className="stop-meta-icon">🔄</span>
-              <span className="stop-meta-label">Alternative</span>
+              <span className="stop-meta-label">Alternatywa</span>
               <span className="stop-meta-value">{stop.alternative}</span>
             </div>
           )}
@@ -104,7 +104,7 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
               className="stop-detail-expand"
               onClick={() => setExpanded(!expanded)}
             >
-              {expanded ? "Show less" : "Read more"}
+              {expanded ? "Zwiń" : "Czytaj więcej"}
             </button>
           )}
         </div>

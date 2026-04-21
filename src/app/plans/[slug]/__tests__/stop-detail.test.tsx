@@ -120,24 +120,24 @@ describe("StopDetail", () => {
   it("shows Read more button when description is long", () => {
     render(<StopDetail stop={baseStop} onClose={() => {}} />);
 
-    expect(screen.getByText("Read more")).toBeInTheDocument();
+    expect(screen.getByText("Czytaj więcej")).toBeInTheDocument();
   });
 
   it("does not show Read more button when description is short", () => {
     const shortDesc = { ...baseStop, description: "Short description." };
     render(<StopDetail stop={shortDesc} onClose={() => {}} />);
 
-    expect(screen.queryByText("Read more")).not.toBeInTheDocument();
+    expect(screen.queryByText("Czytaj więcej")).not.toBeInTheDocument();
   });
 
   it("toggles description expansion", () => {
     render(<StopDetail stop={baseStop} onClose={() => {}} />);
 
-    const expandBtn = screen.getByText("Read more");
+    const expandBtn = screen.getByText("Czytaj więcej");
     fireEvent.click(expandBtn);
-    expect(screen.getByText("Show less")).toBeInTheDocument();
+    expect(screen.getByText("Zwiń")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("Show less"));
-    expect(screen.getByText("Read more")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Zwiń"));
+    expect(screen.getByText("Czytaj więcej")).toBeInTheDocument();
   });
 });
