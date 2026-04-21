@@ -5,7 +5,7 @@ import type { Plan } from "../plan";
 import type { Day } from "../day";
 import type { Stop } from "../stop";
 import type { StopLink } from "../stop-link";
-import { validateSlug } from "@/features/plan/plan.validation";
+import { validateSlug } from "@/core/validation";
 
 // --- Branded Type Tests ---
 

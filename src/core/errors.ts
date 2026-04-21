@@ -1,7 +1,4 @@
-// Shared repository errors plus compatibility re-exports for feature validation errors.
-
-export { type CoordinateValidationError, type UrlValidationError } from "@/features/stop/stop.errors";
-export { type SlugValidationError } from "@/features/plan/plan.errors";
+// Shared repository errors.
 
 export type RepositoryError =
   | { readonly _tag: "RepositoryError"; readonly cause: unknown }
