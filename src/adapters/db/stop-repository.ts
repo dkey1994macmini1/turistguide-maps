@@ -106,9 +106,11 @@ const makePostgresStopRepository = (db: DbClient): StopRepository => ({
   reorderStops: (items: Array<{ id: string; sortOrder: number }>) =>
     Effect.tryPromise({
       try: async () => {
-        for (const item of items) {
-          await db.update(stops).set({ sortOrder: item.sortOrder }).where(eq(stops.id, item.id));
-        }
+        await db.transaction(async (tx) => {
+          for (const item of items) {
+            await tx.update(stops).set({ sortOrder: item.sortOrder }).where(eq(stops.id, item.id));
+          }
+        });
       },
       catch: (error): RepositoryError => RepositoryError.from(error),
     }),

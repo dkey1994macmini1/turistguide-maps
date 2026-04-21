@@ -81,9 +81,11 @@ const makePostgresDayRepository = (db: DbClient): DayRepository => ({
   reorderDays: (items: Array<{ id: string; dayNumber: number }>) =>
     Effect.tryPromise({
       try: async () => {
-        for (const item of items) {
-          await db.update(days).set({ dayNumber: item.dayNumber }).where(eq(days.id, item.id));
-        }
+        await db.transaction(async (tx) => {
+          for (const item of items) {
+            await tx.update(days).set({ dayNumber: item.dayNumber }).where(eq(days.id, item.id));
+          }
+        });
       },
       catch: (error): RepositoryError => RepositoryError.from(error),
     }),
