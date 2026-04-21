@@ -5,8 +5,8 @@ import { existsSync } from "fs";
 import { Effect } from "effect";
 import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
 import { AppLayer } from "@/composition-root";
+import { AUDIO_DIR } from "../audio-constants";
 
-const AUDIO_DIR = join(process.cwd(), "storage", "audio", "stops");
 const FISH_AUDIO_API = "https://api.fish.audio/v1/tts";
 const REFERENCE_ID_PL = "2532d01f4c59446d9e2144803b73e9da"; // Polish voice ref
 const REFERENCE_ID_EN = "bf322df2096a46f18c579d0baa36f41d"; // English voice ref

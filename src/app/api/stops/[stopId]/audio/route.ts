@@ -5,10 +5,7 @@ import { existsSync } from "fs";
 import { Effect } from "effect";
 import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
 import { AppLayer } from "@/composition-root";
-
-const AUDIO_DIR = join(process.cwd(), "storage", "audio", "stops");
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-const ALLOWED_TYPES = ["audio/mpeg", "audio/mp3", "audio/ogg", "audio/wav", "audio/webm", "audio/mp4", "audio/x-m4a"];
+import { AUDIO_DIR, MAX_FILE_SIZE, ALLOWED_AUDIO_TYPES } from "../audio-constants";
 
 // POST /api/stops/[stopId]/audio — upload audio file for a stop
 export async function POST(
@@ -36,7 +33,7 @@ export async function POST(
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.includes(file.type) && !file.name.endsWith(".mp3") && !file.name.endsWith(".ogg") && !file.name.endsWith(".wav") && !file.name.endsWith(".m4a")) {
+  if (!ALLOWED_AUDIO_TYPES.includes(file.type) && !file.name.endsWith(".mp3") && !file.name.endsWith(".ogg") && !file.name.endsWith(".wav") && !file.name.endsWith(".m4a")) {
     return NextResponse.json({ error: "Unsupported audio type. Allowed: mp3, ogg, wav, m4a, webm" }, { status: 400 });
   }
 
