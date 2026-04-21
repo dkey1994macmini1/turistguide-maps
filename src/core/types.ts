@@ -2,6 +2,7 @@
 export * from "./branded";
 export * from "./errors";
 export * from "./stop-link";
+export * from "./stop-types";
 export * from "./plan";
 export * from "./day";
 export * from "./stop";

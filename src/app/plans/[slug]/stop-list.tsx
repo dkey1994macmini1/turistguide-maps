@@ -36,6 +36,9 @@ export function StopList({ stops, selectedStopId, onSelectStop }: StopListProps)
             <span className="stop-order">{index + 1}</span>
             <div className="stop-item-content">
               <strong className="stop-title">{stop.title}</strong>
+              {stop.summary && (
+                <span className="stop-summary">{stop.summary}</span>
+              )}
             </div>
           </button>
         </li>

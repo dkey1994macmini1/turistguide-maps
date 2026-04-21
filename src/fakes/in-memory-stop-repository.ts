@@ -15,11 +15,19 @@ const makeFakeStopRepository = (): StopRepository => {
           id,
           dayId: DayId(input.dayId),
           title: input.title,
+          summary: input.summary ?? null,
           description: input.description,
           lat: input.lat,
           lng: input.lng,
           sortOrder: input.sortOrder,
           links: input.links ?? [],
+          duration: input.duration ?? null,
+          cost: input.cost ?? null,
+          reservation: input.reservation ?? null,
+          bring: input.bring ?? [],
+          bestTime: input.bestTime ?? null,
+          warnings: input.warnings ?? [],
+          alternative: input.alternative ?? null,
         };
         store.set(stop.id, stop);
         return stop;
@@ -44,11 +52,19 @@ const makeFakeStopRepository = (): StopRepository => {
         const updated: Stop = {
           ...existing,
           ...(input.title !== undefined && { title: input.title }),
+          ...(input.summary !== undefined && { summary: input.summary }),
           ...(input.description !== undefined && { description: input.description }),
           ...(input.lat !== undefined && { lat: input.lat }),
           ...(input.lng !== undefined && { lng: input.lng }),
           ...(input.sortOrder !== undefined && { sortOrder: input.sortOrder }),
           ...(input.links !== undefined && { links: input.links }),
+          ...(input.duration !== undefined && { duration: input.duration }),
+          ...(input.cost !== undefined && { cost: input.cost }),
+          ...(input.reservation !== undefined && { reservation: input.reservation }),
+          ...(input.bring !== undefined && { bring: input.bring }),
+          ...(input.bestTime !== undefined && { bestTime: input.bestTime }),
+          ...(input.warnings !== undefined && { warnings: input.warnings }),
+          ...(input.alternative !== undefined && { alternative: input.alternative }),
         };
         store.set(id, updated);
         return updated;

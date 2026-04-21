@@ -410,6 +410,19 @@ button {
   color: var(--color-text);
 }
 
+.stop-summary {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 
 /* ═══════════════════════ Stop Detail ═══════════════════════ */
 
@@ -451,6 +464,56 @@ button {
   color: var(--color-text);
 }
 
+.stop-detail-summary {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.stop-detail-metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--color-primary-bg);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+}
+
+.stop-meta-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.stop-meta-icon {
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.stop-meta-label {
+  flex-shrink: 0;
+  width: 80px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.stop-meta-value {
+  color: var(--color-text);
+}
+
+.stop-meta-warning .stop-meta-value {
+  color: #b45309;
+}
+
+.stop-detail-description-wrapper {
+  margin-bottom: 12px;
+}
+
 .stop-detail-description {
   font-size: 0.9rem;
   color: var(--color-text-secondary);
@@ -460,6 +523,43 @@ button {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+.stop-detail-description.collapsed {
+  max-height: 6em;
+  overflow: hidden;
+  position: relative;
+}
+
+.stop-detail-description.collapsed::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.5em;
+  background: linear-gradient(transparent, var(--color-bg));
+  pointer-events: none;
+}
+
+.stop-detail-expand {
+  display: block;
+  width: 100%;
+  padding: 6px 0;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: -6px;
+  margin-bottom: 8px;
+  transition: background 0.15s ease;
+}
+
+.stop-detail-expand:hover {
+  background: var(--color-primary-bg);
 }
 
 .stop-detail-links {

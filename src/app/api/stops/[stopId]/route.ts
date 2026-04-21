@@ -4,6 +4,7 @@ import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
 import { AppLayer } from "@/composition-root";
 import { validateCoordinates, validateUrl } from "@/core/validation";
 import type { StopLink } from "@/core/stop-link";
+import type { DurationRange, CostInfo } from "@/core/stop-types";
 
 
 // PATCH /api/stops/[stopId] — update a stop
@@ -20,7 +21,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { title, description, lat, lng, sortOrder, links } = body as Record<string, unknown>;
+  const { title, description, summary, lat, lng, sortOrder, links, duration, cost, reservation, bring, bestTime, warnings, alternative } = body as Record<string, unknown>;
 
   if (typeof lat === "number" && typeof lng === "number") {
     const coordResult = Effect.runSyncExit(validateCoordinates(lat, lng));
@@ -46,10 +47,18 @@ export async function PATCH(
       return yield* repo.updateStop(stopId, {
         ...(typeof title === "string" && { title }),
         ...(typeof description === "string" && { description }),
+        ...(typeof summary === "string" && { summary }),
         ...(typeof lat === "number" && { lat }),
         ...(typeof lng === "number" && { lng }),
         ...(typeof sortOrder === "number" && { sortOrder }),
         ...(Array.isArray(links) && { links }),
+        ...(duration !== undefined && { duration: (duration && typeof duration === "object" && "min" in duration && "max" in duration) ? duration as DurationRange : null }),
+        ...(cost !== undefined && { cost: (cost && typeof cost === "object" && "amount" in cost && "currency" in cost && "per" in cost) ? cost as CostInfo : null }),
+        ...(reservation !== undefined && { reservation: typeof reservation === "string" ? reservation : null }),
+        ...(Array.isArray(bring) && { bring }),
+        ...(bestTime !== undefined && { bestTime: typeof bestTime === "string" ? bestTime : null }),
+        ...(Array.isArray(warnings) && { warnings }),
+        ...(alternative !== undefined && { alternative: typeof alternative === "string" ? alternative : null }),
       });
     }).pipe(Effect.provide(AppLayer))
   );

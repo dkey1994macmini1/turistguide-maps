@@ -4,6 +4,7 @@ import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
 import { AppLayer } from "@/composition-root";
 import { validateCoordinates, validateUrl } from "@/core/validation";
 import type { StopLink } from "@/core/stop-link";
+import type { DurationRange, CostInfo } from "@/core/stop-types";
 
 
 // GET /api/days/[dayId]/stops — list stops for a day
@@ -41,7 +42,7 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { title, description, lat, lng, sortOrder, links } = body as Record<string, unknown>;
+  const { title, description, summary, lat, lng, sortOrder, links, duration, cost, reservation, bring, bestTime, warnings, alternative } = body as Record<string, unknown>;
 
   if (typeof title !== "string" || typeof lat !== "number" || typeof lng !== "number" || typeof sortOrder !== "number") {
     return NextResponse.json({ error: "title, lat, lng, and sortOrder are required" }, { status: 400 });
@@ -72,10 +73,18 @@ export async function POST(
         dayId,
         title,
         description: typeof description === "string" ? description : "",
+        summary: typeof summary === "string" ? summary : null,
         lat,
         lng,
         sortOrder,
         links: Array.isArray(links) ? links : [],
+        duration: (duration && typeof duration === "object" && "min" in duration && "max" in duration) ? duration as DurationRange : null,
+        cost: (cost && typeof cost === "object" && "amount" in cost && "currency" in cost && "per" in cost) ? cost as CostInfo : null,
+        reservation: typeof reservation === "string" ? reservation : null,
+        bring: Array.isArray(bring) ? bring : [],
+        bestTime: typeof bestTime === "string" ? bestTime : null,
+        warnings: Array.isArray(warnings) ? warnings : [],
+        alternative: typeof alternative === "string" ? alternative : null,
       });
     }).pipe(Effect.provide(AppLayer))
   );

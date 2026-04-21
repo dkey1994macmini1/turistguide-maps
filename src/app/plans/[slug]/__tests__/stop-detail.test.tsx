@@ -10,7 +10,8 @@ const baseStop: StopItem = {
   id: "s1",
   dayId: "day-1",
   title: "Diamond Head",
-  description: "Iconic volcanic crater with panoramic views",
+  summary: "Iconic volcanic crater with panoramic views of Waikiki.",
+  description: "Diamond Head is a volcanic tuff cone on the Hawaiian island of Oahu. The trail to the summit climbs 560 feet and offers panoramic views of Waikiki and the Pacific Ocean. The hike takes about 45 minutes round trip and is best done early morning to avoid the heat and crowds. Bring water and sunscreen as there is no shade on the trail.",
   lat: 21.2724,
   lng: -157.8081,
   sortOrder: 0,
@@ -19,14 +20,33 @@ const baseStop: StopItem = {
     { label: "NPS", url: "https://nps.gov/diamond-head" },
   ],
   googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=21.2724,-157.8081",
+  duration: { min: 45, max: 90 },
+  cost: { amount: 5, currency: "USD", note: "per person" },
+  reservation: "Book online 1 day ahead",
+  bring: ["Water", "Sunscreen", "Hat"],
+  bestTime: "Early morning before 9 AM",
+  warnings: ["No shade", "Steep stairs at summit"],
+  alternative: "Koko Crater Trail for a harder workout",
 };
 
 describe("StopDetail", () => {
-  it("renders stop title and description", () => {
+  it("renders stop title and summary", () => {
     render(<StopDetail stop={baseStop} onClose={() => {}} />);
 
     expect(screen.getByText("Diamond Head")).toBeInTheDocument();
-    expect(screen.getByText("Iconic volcanic crater with panoramic views")).toBeInTheDocument();
+    expect(screen.getByText("Iconic volcanic crater with panoramic views of Waikiki.")).toBeInTheDocument();
+  });
+
+  it("renders structured metadata", () => {
+    render(<StopDetail stop={baseStop} onClose={() => {}} />);
+
+    expect(screen.getByText(/45–90 min/)).toBeInTheDocument();
+    expect(screen.getByText(/5 USD · per person/)).toBeInTheDocument();
+    expect(screen.getByText("Book online 1 day ahead")).toBeInTheDocument();
+    expect(screen.getByText("Water, Sunscreen, Hat")).toBeInTheDocument();
+    expect(screen.getByText("Early morning before 9 AM")).toBeInTheDocument();
+    expect(screen.getByText("No shade · Steep stairs at summit")).toBeInTheDocument();
+    expect(screen.getByText("Koko Crater Trail for a harder workout")).toBeInTheDocument();
   });
 
   it("renders links as external anchors", () => {
@@ -40,7 +60,7 @@ describe("StopDetail", () => {
     expect(npsLink).toHaveAttribute("href", "https://nps.gov/diamond-head");
   });
 
-  it("renders coordinates as Google Maps link", () => {
+  it("renders Google Maps link", () => {
     render(<StopDetail stop={baseStop} onClose={() => {}} />);
 
     const gmapsLink = screen.getByText("📍 Google Maps");
@@ -61,5 +81,63 @@ describe("StopDetail", () => {
     render(<StopDetail stop={noLinks} onClose={() => {}} />);
 
     expect(screen.queryByText("AllTrails")).not.toBeInTheDocument();
+  });
+
+  it("does not render duplicate Google Maps link from links array", () => {
+    const withGmapsLink = {
+      ...baseStop,
+      links: [
+        { label: "Google Maps", url: "https://www.google.com/maps/search/Los+Angeles" },
+        { label: "AllTrails", url: "https://alltrails.com/diamond-head" },
+      ],
+    };
+    render(<StopDetail stop={withGmapsLink} onClose={() => {}} />);
+
+    const gmapsLinks = screen.queryAllByText("Google Maps");
+    expect(gmapsLinks).toHaveLength(0); // filtered out from links section
+    const gmapsEmoji = screen.getByText("📍 Google Maps"); // only the emoji one remains
+    expect(gmapsEmoji).toBeInTheDocument();
+  });
+
+  it("does not render metadata section when no structured data", () => {
+    const noMeta: StopItem = {
+      ...baseStop,
+      duration: null,
+      cost: null,
+      reservation: null,
+      bring: [],
+      bestTime: null,
+      warnings: [],
+      alternative: null,
+    };
+    render(<StopDetail stop={noMeta} onClose={() => {}} />);
+
+    // No metadata icons should appear
+    expect(screen.queryByText(/45–90 min/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Water, Sunscreen, Hat")).not.toBeInTheDocument();
+  });
+
+  it("shows Read more button when description is long", () => {
+    render(<StopDetail stop={baseStop} onClose={() => {}} />);
+
+    expect(screen.getByText("Read more")).toBeInTheDocument();
+  });
+
+  it("does not show Read more button when description is short", () => {
+    const shortDesc = { ...baseStop, description: "Short description." };
+    render(<StopDetail stop={shortDesc} onClose={() => {}} />);
+
+    expect(screen.queryByText("Read more")).not.toBeInTheDocument();
+  });
+
+  it("toggles description expansion", () => {
+    render(<StopDetail stop={baseStop} onClose={() => {}} />);
+
+    const expandBtn = screen.getByText("Read more");
+    fireEvent.click(expandBtn);
+    expect(screen.getByText("Show less")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Show less"));
+    expect(screen.getByText("Read more")).toBeInTheDocument();
   });
 });

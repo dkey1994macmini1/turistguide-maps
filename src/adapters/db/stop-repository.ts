@@ -5,6 +5,7 @@ import { StopRepositoryPort, type StopRepository } from "../../core/ports/stop-r
 import { RepositoryError } from "../../core/errors";
 import { StopId, DayId } from "../../core/branded";
 import type { Stop, StopCreateInput, StopUpdateInput } from "../../core/stop";
+import type { DurationRange, CostInfo } from "../../core/stop-types";
 import type { StopLink } from "../../core/stop-link";
 import { stops, type StopDAO, type StopInsertDAO } from "@/common/db/schema";
 import { eq } from "drizzle-orm";
@@ -15,11 +16,19 @@ const toStop = (row: StopDAO): Stop => ({
   id: StopId(row.id),
   dayId: DayId(row.dayId),
   title: row.title,
+  summary: row.summary,
   description: row.description,
   lat: row.lat,
   lng: row.lng,
   sortOrder: row.sortOrder,
   links: (row.links ?? []) as ReadonlyArray<StopLink>,
+  duration: (row.duration as import("../../core/stop-types").DurationRange) ?? null,
+  cost: (row.cost as import("../../core/stop-types").CostInfo) ?? null,
+  reservation: row.reservation ?? null,
+  bring: (row.bring ?? []) as ReadonlyArray<string>,
+  bestTime: row.bestTime ?? null,
+  warnings: (row.warnings ?? []) as ReadonlyArray<string>,
+  alternative: row.alternative ?? null,
 });
 
 const makePostgresStopRepository = (db: DbClient): StopRepository => ({
@@ -31,11 +40,19 @@ const makePostgresStopRepository = (db: DbClient): StopRepository => ({
           id,
           dayId: DayId(input.dayId),
           title: input.title,
+          summary: input.summary ?? null,
           description: input.description,
           lat: input.lat,
           lng: input.lng,
           sortOrder: input.sortOrder,
           links: (input.links ?? []) as Array<{ label: string; url: string }>,
+          duration: input.duration ?? null,
+          cost: input.cost ?? null,
+          reservation: input.reservation ?? null,
+          bring: input.bring ?? [],
+          bestTime: input.bestTime ?? null,
+          warnings: input.warnings ?? [],
+          alternative: input.alternative ?? null,
         };
         const [row] = await db.insert(stops).values(insertData).returning();
         return toStop(row);
@@ -71,11 +88,19 @@ const makePostgresStopRepository = (db: DbClient): StopRepository => ({
       try: async () => {
         const updateData: Partial<StopDAO> = {
           ...(input.title !== undefined && { title: input.title }),
+          ...(input.summary !== undefined && { summary: input.summary }),
           ...(input.description !== undefined && { description: input.description }),
           ...(input.lat !== undefined && { lat: input.lat }),
           ...(input.lng !== undefined && { lng: input.lng }),
           ...(input.sortOrder !== undefined && { sortOrder: input.sortOrder }),
           ...(input.links !== undefined && { links: input.links as Array<{ label: string; url: string }> }),
+          ...(input.duration !== undefined && { duration: input.duration as DurationRange | null }),
+          ...(input.cost !== undefined && { cost: input.cost as CostInfo | null }),
+          ...(input.reservation !== undefined && { reservation: input.reservation as string | null }),
+          ...(input.bring !== undefined && { bring: [...(input.bring ?? [])] }),
+          ...(input.bestTime !== undefined && { bestTime: input.bestTime as string | null }),
+          ...(input.warnings !== undefined && { warnings: [...(input.warnings ?? [])] }),
+          ...(input.alternative !== undefined && { alternative: input.alternative as string | null }),
         };
         const [row] = await db.update(stops).set(updateData).where(eq(stops.id, id)).returning();
         if (!row) throw { _tag: "NotFoundError" as const, id };

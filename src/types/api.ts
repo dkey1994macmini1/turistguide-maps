@@ -22,11 +22,19 @@ export type StopItem = {
   dayId: string;
   title: string;
   description: string;
+  summary: string | null;
   lat: number;
   lng: number;
   sortOrder: number;
   links: ReadonlyArray<{ label: string; url: string }>;
   googleMapsUrl: string;
+  duration: { min: number; max: number } | null;
+  cost: { amount: number; currency: string; note?: string } | null;
+  reservation: string | null;
+  bring: ReadonlyArray<string>;
+  bestTime: string | null;
+  warnings: ReadonlyArray<string>;
+  alternative: string | null;
 };
 
 export type DayWithStops = DayItem & {

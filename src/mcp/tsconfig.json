@@ -1,0 +1,11 @@
+// Separate tsconfig for MCP server — uses Effect TS with looser type checking.
+// This file is NOT part of Next.js build (tsx runs it directly via stdio).
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "strict": false,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["./server.ts", "../../src/core/**/*.ts", "../../src/adapters/**/*.ts", "../../src/composition-root.ts"]
+}

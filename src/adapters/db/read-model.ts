@@ -18,11 +18,19 @@ const toStop = (row: typeof stops.$inferSelect): Stop => ({
   id: StopId(row.id),
   dayId: DayId(row.dayId),
   title: row.title,
+  summary: row.summary,
   description: row.description,
   lat: row.lat,
   lng: row.lng,
   sortOrder: row.sortOrder,
   links: (row.links ?? []) as ReadonlyArray<StopLink>,
+  duration: (row.duration as import("../../core/stop-types").DurationRange) ?? null,
+  cost: (row.cost as import("../../core/stop-types").CostInfo) ?? null,
+  reservation: row.reservation ?? null,
+  bring: (row.bring ?? []) as ReadonlyArray<string>,
+  bestTime: row.bestTime ?? null,
+  warnings: (row.warnings ?? []) as ReadonlyArray<string>,
+  alternative: row.alternative ?? null,
 });
 
 /** Convert a Stop to StopReadModel with computed googleMapsUrl */

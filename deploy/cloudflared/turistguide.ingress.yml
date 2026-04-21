@@ -1,6 +1,4 @@
 # Source of truth for turistguide ingress.
 # Applied into ~/.cloudflared/config.yml by scripts/apply-cloudflared.sh
   - hostname: turistguide.karwackid.cloud
-    service: https://localhost:8443
-    originRequest:
-      noTLSVerify: true
+    service: http://localhost:3000
