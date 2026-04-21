@@ -31,3 +31,7 @@ tmp/
 
 # Audio uploads (user-generated content)
 storage/
+
+# ── GSD baseline (auto-generated) ──
+.mcp.json
+.worktrees/
