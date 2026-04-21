@@ -14,7 +14,7 @@ const makePostgresPlanRepository = (db: DbClient): PlanRepository => ({
   createPlan: (input: PlanCreateInput) =>
     Effect.tryPromise({
       try: async () => {
-        const id = PlanId(`plan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+        const id = PlanId(`plan-${crypto.randomUUID()}`);
         const slug = Slug(input.slug);
         const now = new Date();
         const insertData: PlanInsertDAO = {

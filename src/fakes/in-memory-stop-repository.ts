@@ -10,7 +10,7 @@ const makeFakeStopRepository = (): StopRepository => {
   return {
     createStop: (input: StopCreateInput) =>
       Effect.gen(function* () {
-        const id = StopId(`stop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+        const id = StopId(`stop-${crypto.randomUUID()}`);
         const stop: Stop = {
           id,
           dayId: DayId(input.dayId),

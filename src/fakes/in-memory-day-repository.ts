@@ -10,7 +10,7 @@ const makeFakeDayRepository = (): DayRepository => {
   return {
     createDay: (input: DayCreateInput) =>
       Effect.gen(function* () {
-        const id = DayId(`day-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+        const id = DayId(`day-${crypto.randomUUID()}`);
         const day: Day = {
           id,
           planId: PlanId(input.planId),

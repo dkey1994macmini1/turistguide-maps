@@ -10,7 +10,7 @@ const makeFakePlanRepository = (): PlanRepository => {
   return {
     createPlan: (input: PlanCreateInput) =>
       Effect.gen(function* () {
-        const id = PlanId(`plan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+        const id = PlanId(`plan-${crypto.randomUUID()}`);
         const slug = Slug(input.slug);
         const now = new Date();
         const plan: Plan = { id, slug, title: input.title, description: input.description, createdAt: now, updatedAt: now };

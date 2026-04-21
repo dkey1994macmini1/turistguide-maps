@@ -14,7 +14,7 @@ const makePostgresDayRepository = (db: DbClient): DayRepository => ({
   createDay: (input: DayCreateInput) =>
     Effect.tryPromise({
       try: async () => {
-        const id = DayId(`day-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+        const id = DayId(`day-${crypto.randomUUID()}`);
         const insertData: DayInsertDAO = {
           id,
           planId: PlanId(input.planId),

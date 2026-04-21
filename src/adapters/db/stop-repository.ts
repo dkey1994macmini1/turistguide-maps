@@ -15,7 +15,7 @@ const makePostgresStopRepository = (db: DbClient): StopRepository => ({
   createStop: (input: StopCreateInput) =>
     Effect.tryPromise({
       try: async () => {
-        const id = StopId(`stop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+        const id = StopId(`stop-${crypto.randomUUID()}`);
         const insertData: StopInsertDAO = {
           id,
           dayId: DayId(input.dayId),
