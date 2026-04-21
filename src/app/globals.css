@@ -542,9 +542,15 @@ button {
   pointer-events: none;
 }
 
+.stop-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 .stop-detail-expand {
-  display: block;
-  width: 100%;
+  flex: 1;
   padding: 6px 0;
   background: none;
   border: 1px solid var(--color-border);
@@ -553,12 +559,27 @@ button {
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  margin-top: -6px;
-  margin-bottom: 8px;
   transition: background 0.15s ease;
 }
 
 .stop-detail-expand:hover {
+  background: var(--color-primary-bg);
+}
+
+.stop-detail-copy {
+  padding: 6px 10px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-left: 6px;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.stop-detail-copy:hover {
   background: var(--color-primary-bg);
 }
 

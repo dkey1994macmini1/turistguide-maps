@@ -27,6 +27,7 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
   const [generating, setGenerating] = useState(false);
   const [showTtsConfirm, setShowTtsConfirm] = useState(false);
   const [ttsError, setTtsError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -74,6 +75,16 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
       setTtsError("Błąd połączenia z serwerem TTS");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleCopyDescription = async () => {
+    try {
+      await navigator.clipboard.writeText(stop.description);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback — unlikely on mobile, just ignore
     }
   };
 
@@ -233,14 +244,23 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
           <div className={`stop-detail-description ${expanded ? "expanded" : "collapsed"}`}>
             {stop.description}
           </div>
-          {stop.description.length > 200 && (
+          <div className="stop-detail-actions">
+            {stop.description.length > 200 ? (
+              <button
+                className="stop-detail-expand"
+                onClick={() => setExpanded(!expanded)}
+              >
+                {expanded ? "Zwiń" : "Czytaj więcej"}
+              </button>
+            ) : null}
             <button
-              className="stop-detail-expand"
-              onClick={() => setExpanded(!expanded)}
+              className="stop-detail-copy"
+              onClick={handleCopyDescription}
+              title="Kopiuj opis"
             >
-              {expanded ? "Zwiń" : "Czytaj więcej"}
+              {copied ? "✓" : "📋"}
             </button>
-          )}
+          </div>
         </div>
       )}
 

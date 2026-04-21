@@ -123,11 +123,21 @@ describe("StopDetail", () => {
     expect(screen.getByText("Czytaj więcej")).toBeInTheDocument();
   });
 
+  it("renders copy description button", () => {
+    render(<StopDetail stop={baseStop} onClose={() => {}} />);
+
+    const copyBtn = screen.getByTitle("Kopiuj opis");
+    expect(copyBtn).toBeInTheDocument();
+    expect(copyBtn).toHaveTextContent("📋");
+  });
+
   it("does not show Read more button when description is short", () => {
     const shortDesc = { ...baseStop, description: "Short description." };
     render(<StopDetail stop={shortDesc} onClose={() => {}} />);
 
     expect(screen.queryByText("Czytaj więcej")).not.toBeInTheDocument();
+    // copy button still present even for short descriptions
+    expect(screen.getByTitle("Kopiuj opis")).toBeInTheDocument();
   });
 
   it("toggles description expansion", () => {
