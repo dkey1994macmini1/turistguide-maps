@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readFile, stat } from "fs/promises";
 import { existsSync } from "fs";
+import { join } from "path";
 import { AUDIO_DIR } from "@/app/api/stops/[stopId]/audio-constants";
 
 const POSSIBLE_EXTS = ["mp3", "ogg", "wav", "m4a", "webm"];
