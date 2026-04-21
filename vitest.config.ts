@@ -4,7 +4,7 @@ import path from "path";
 export default defineConfig({
   test: {
     globals: true,
-    exclude: ["**/.gsd/**", "**/node_modules/**"],
+    exclude: ["**/.gsd/**", "**/node_modules/**", "**/.worktrees/**"],
     environment: "node",
     setupFiles: ["./src/tests/setup.ts"],
   },

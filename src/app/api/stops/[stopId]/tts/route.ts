@@ -6,6 +6,7 @@ import { Effect } from "effect";
 import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
 import { AppLayer } from "@/composition-root";
 import { AUDIO_DIR } from "../audio-constants";
+import { preprocessTtsText } from "@/lib/tts-preprocess";
 
 const FISH_AUDIO_API = "https://api.fish.audio/v1/tts";
 const REFERENCE_ID_PL = "2532d01f4c59446d9e2144803b73e9da"; // Polish voice ref
@@ -52,7 +53,7 @@ export async function POST(
     // No body or invalid JSON — use defaults
   }
 
-  const ttsText = bodyText ?? text;
+  const ttsText = preprocessTtsText(bodyText ?? text);
   const referenceId = bodyReferenceId ?? REFERENCE_ID_PL;
 
   // Call Fish Audio API
