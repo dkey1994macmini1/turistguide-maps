@@ -4,7 +4,7 @@ import { Effect, Layer } from "effect";
 import { StopRepositoryPort, type StopRepository } from "../../core/ports/stop-repository-port";
 import { RepositoryError } from "../../core/errors";
 import { StopId, DayId } from "../../core/branded";
-import type { Stop, StopCreateInput, StopUpdateInput } from "../../core/stop";
+import type { StopCreateInput, StopUpdateInput } from "../../core/stop";
 import type { DurationRange, CostInfo } from "../../core/stop-types";
 import { stops, type StopDAO, type StopInsertDAO } from "@/common/db/schema";
 import { eq } from "drizzle-orm";
