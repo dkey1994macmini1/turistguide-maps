@@ -56,6 +56,7 @@ function serializePlan(plan: any) {
         bestTime: stop.bestTime ?? null,
         warnings: stop.warnings ?? [],
         alternative: stop.alternative ?? null,
+        audioUrl: stop.audioUrl ?? null,
       })),
     })),
   };
@@ -246,18 +247,29 @@ server.registerTool(
         const existingDay = plan.days.find((d: any) => d.dayNumber === dayNumber);
 
         if (existingDay) {
-          // Update existing day: delete old stops, update day metadata, create new stops
-          for (const stop of existingDay.stops) yield* stopRepo.deleteStop(stop.id);
+          // Update existing day: match stops by title to preserve audioUrl + audio files
           yield* dayRepo.updateDay(existingDay.id, {
             title: title ?? null,
             description: description ?? null,
           });
+
+          const existingStops = existingDay.stops;
+          const newTitles = new Set(stops.map((s: any) => s.title));
+
+          // Delete stops that no longer exist in the new list
+          for (const oldStop of existingStops) {
+            if (!newTitles.has(oldStop.title)) {
+              yield* stopRepo.deleteStop(oldStop.id);
+            }
+          }
+
           const createdStops = [];
           for (let i = 0; i < stops.length; i++) {
             const s = stops[i];
-            createdStops.push(
-              yield* stopRepo.createStop({
-                dayId: existingDay.id,
+            const matching = existingStops.find((o: any) => o.title === s.title);
+            if (matching) {
+              // Update existing stop — preserve audioUrl
+              const updated = yield* stopRepo.updateStop(matching.id, {
                 title: s.title,
                 description: s.description,
                 summary: s.summary ?? null,
@@ -272,8 +284,30 @@ server.registerTool(
                 bestTime: s.bestTime ?? null,
                 warnings: s.warnings ?? [],
                 alternative: s.alternative ?? null,
-              }),
-            );
+              });
+              createdStops.push(updated);
+            } else {
+              // New stop — no audioUrl to preserve
+              createdStops.push(
+                yield* stopRepo.createStop({
+                  dayId: existingDay.id,
+                  title: s.title,
+                  description: s.description,
+                  summary: s.summary ?? null,
+                  lat: s.lat,
+                  lng: s.lng,
+                  sortOrder: i + 1,
+                  links: s.links ?? [],
+                  duration: s.duration ?? null,
+                  cost: s.cost ?? null,
+                  reservation: s.reservation ?? null,
+                  bring: s.bring ?? [],
+                  bestTime: s.bestTime ?? null,
+                  warnings: s.warnings ?? [],
+                  alternative: s.alternative ?? null,
+                }),
+              );
+            }
           }
           return { dayNumber, title, description, stops: createdStops, mode: "updated" };
         }
