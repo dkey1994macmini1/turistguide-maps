@@ -26,6 +26,7 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
   const [audioUrl, setAudioUrl] = useState(stop.audioUrl);
   const [generating, setGenerating] = useState(false);
   const [showTtsConfirm, setShowTtsConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [ttsError, setTtsError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -47,6 +48,7 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
   };
 
   const handleDeleteAudio = async () => {
+    setShowDeleteConfirm(false);
     setUploading(true);
     try {
       const res = await fetch(`/api/stops/${stop.id}/audio`, { method: "DELETE" });
@@ -165,7 +167,7 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
             <audio controls src={audioUrl} className="stop-audio-element" />
             <button
               className="stop-audio-delete"
-              onClick={handleDeleteAudio}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={uploading || generating}
               title="Usuń audio"
             >
@@ -227,6 +229,23 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
                 Tak, generuj
               </button>
               <button className="stop-tts-confirm-no" onClick={() => setShowTtsConfirm(false)}>
+                Anuluj
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Delete confirm dialog */}
+        {showDeleteConfirm && (
+          <div className="stop-tts-confirm">
+            <p className="stop-tts-confirm-text">
+              Usunąć plik audio? Tej operacji nie można cofnąć.
+            </p>
+            <div className="stop-tts-confirm-buttons">
+              <button className="stop-tts-confirm-yes" onClick={handleDeleteAudio}>
+                Tak, usuń
+              </button>
+              <button className="stop-tts-confirm-no" onClick={() => setShowDeleteConfirm(false)}>
                 Anuluj
               </button>
             </div>
