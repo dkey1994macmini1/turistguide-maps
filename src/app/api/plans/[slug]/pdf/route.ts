@@ -122,8 +122,8 @@ async function generateDayMap(
   base.composite(compositeInputs);
   const mapImage = await base.png().toBuffer();
 
-  // Step 2: Resize
-  const resized = await sharp(mapImage).resize(width, height, { fit: "cover" }).png().toBuffer();
+  // Step 2: Resize & convert to JPEG for smaller PDF
+  const resized = await sharp(mapImage).resize(width, height, { fit: "cover" }).jpeg({ quality: 80 }).toBuffer();
 
   // Step 3: Overlay numbered pins
   const scaleX = width / fullW;
@@ -144,7 +144,7 @@ async function generateDayMap(
 
   const svgOverlay = Buffer.from(`<svg width="${width}" height="${height}">${pinsSvg}</svg>`);
 
-  return sharp(resized).composite([{ input: svgOverlay, left: 0, top: 0 }]).png().toBuffer();
+  return sharp(resized).composite([{ input: svgOverlay, left: 0, top: 0 }]).jpeg({ quality: 85 }).toBuffer();
 }
 
 // ─── PDF ───
