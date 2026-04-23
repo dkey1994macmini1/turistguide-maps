@@ -609,20 +609,50 @@ button {
 
 /* Audio settings */
 .audio-settings {
+  position: relative;
   flex-shrink: 0;
 }
 
-.audio-settings-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
+.audio-settings-icon {
+  font-size: 1rem;
+  padding: 2px 4px;
+  border-radius: var(--radius);
   cursor: pointer;
+  transition: background 0.15s ease;
+  line-height: 1;
 }
 
-.audio-settings-text {
-  margin-right: 2px;
+.audio-settings-icon:hover {
+  background: var(--color-primary-bg);
+}
+
+.audio-settings-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 10px 14px;
+  z-index: 100;
+  min-width: 180px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.audio-settings-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  cursor: default;
 }
 
 .plan-header-row {
