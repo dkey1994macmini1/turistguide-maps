@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "turistguide-maps": {
-      "command": "npx",
-      "args": ["tsx", "/Users/damiankarwacki/projects/turistguide-maps/src/mcp/server.ts"],
+      "command": "node",
+      "args": ["/Users/damiankarwacki/projects/turistguide-maps/bin/turistguide-maps-mcp.mjs"],
       "cwd": "/Users/damiankarwacki/projects/turistguide-maps",
       "env": {
         "DATABASE_URL": "postgresql://localhost:5432/turistguide"

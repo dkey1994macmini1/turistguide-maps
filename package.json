@@ -14,10 +14,10 @@
     "db:push": "drizzle-kit push",
     "db:seed": "npx tsx scripts/seed.ts",
     "setup": "npm run db:push && npm run db:seed",
-    "mcp": "npx tsx src/mcp/server.ts"
+    "mcp": "node ./bin/turistguide-maps-mcp.mjs"
   },
   "bin": {
-    "turistguide-maps-mcp": "./src/mcp/server.ts"
+    "turistguide-maps-mcp": "./bin/turistguide-maps-mcp.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

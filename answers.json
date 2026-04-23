@@ -1,0 +1,4 @@
+{
+  "questions": { "test_framework": "vitest", "package_manager": "npm" },
+  "defaults": { "strategy": "first_option" }
+}

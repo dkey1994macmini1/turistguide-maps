@@ -39,6 +39,7 @@ export function serializeReadModel(plan: PlanReadModel) {
         bestTime: stop.bestTime ?? null,
         warnings: stop.warnings ?? [],
         alternative: stop.alternative ?? null,
+        audioUrl: stop.audioUrl ?? null,
       })),
     })),
   };
