@@ -13,19 +13,19 @@ const FONT_BOLD = path.join(FONTS_DIR, "NotoSans-Bold.ttf");
 
 // Subtle, warm palette
 const C = {
-  primary: "#5a7d6a",      // muted sage green
-  dark: "#3d5a4e",         // deep sage
-  text: "#2c2c2c",         // near-black
-  muted: "#6b6b6b",        // mid gray
-  light: "#9a9a9a",        // light gray
-  accent: "#7a9e8e",      // soft green
-  warning: "#b85c3a",     // warm terracotta
-  divider: "#d4d4d4",     // light border
-  headerBg: "#f7f5f3",    // warm off-white
-  dayBar: "#e8ede9",      // pale sage wash
+  primary: "#5a7d6a",
+  dark: "#3d5a4e",
+  text: "#2c2c2c",
+  muted: "#6b6b6b",
+  light: "#9a9a9a",
+  accent: "#7a9e8e",
+  warning: "#b85c3a",
+  divider: "#d4d4d4",
+  headerBg: "#f7f5f3",
+  dayBar: "#e8ede9",
 };
 
-// ─── Static map generation via OSM tiles + sharp ───
+// ─── Tile math ───
 
 function lonToX(lon: number, zoom: number): number {
   return ((lon + 180) / 360) * Math.pow(2, zoom);
@@ -38,13 +38,15 @@ function latToY(lat: number, zoom: number): number {
   ) * Math.pow(2, zoom);
 }
 
-function fetchTile(z: number, x: number, y: number): Promise<Buffer> {
+async function fetchTile(z: number, x: number, y: number): Promise<Buffer> {
   const url = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), 8000);
   return fetch(url, {
     signal: ac.signal,
-    headers: { "User-Agent": "TuristGuide/1.0 (+turistguide.karwackid.cloud)" },
+    headers: {
+      "User-Agent": "TuristGuide/1.0 (+turistguide.karwackid.cloud)",
+    },
   })
     .then((r) => {
       clearTimeout(timer);
@@ -52,52 +54,54 @@ function fetchTile(z: number, x: number, y: number): Promise<Buffer> {
       return r.arrayBuffer();
     })
     .then((ab) => Buffer.from(ab))
-    .catch(() => {
-      // Fallback: blank white tile
-      return sharp({ create: { width: 256, height: 256, channels: 3, background: { r: 240, g: 240, b: 240 } } }).png().toBuffer();
-    });
+    .catch(() =>
+      sharp({
+        create: {
+          width: 256,
+          height: 256,
+          channels: 3,
+          background: { r: 240, g: 240, b: 240 },
+        },
+      })
+        .png()
+        .toBuffer()
+    );
 }
 
+// ─── Map generation (3-step: compose tiles → resize → overlay pins) ───
+
 async function generateStaticMap(
-  stops: { lat: number; lng: number; title: string }[],
+  stops: { lat: number; lng: number }[],
   width = 595,
-  height = 350
+  height = 300
 ): Promise<Buffer | null> {
   if (stops.length === 0) return null;
 
   const lats = stops.map((s) => s.lat);
   const lngs = stops.map((s) => s.lng);
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs);
-  const maxLng = Math.max(...lngs);
+  const pad = 0.03;
+  const minLat = Math.min(...lats) - pad;
+  const maxLat = Math.max(...lats) + pad;
+  const minLng = Math.min(...lngs) - pad;
+  const maxLng = Math.max(...lngs) + pad;
 
-  // Add padding
-  const pad = 0.02;
-  const cMinLat = minLat - pad;
-  const cMaxLat = maxLat + pad;
-  const cMinLng = minLng - pad;
-  const cMaxLng = maxLng + pad;
-
-  // Choose zoom that fits all stops
   const zoom = 10;
-
-  // Calculate tile range
-  const xMin = Math.floor(lonToX(cMinLng, zoom));
-  const xMax = Math.ceil(lonToX(cMaxLng, zoom));
-  const yMin = Math.floor(latToY(cMaxLat, zoom)); // Y is inverted
-  const yMax = Math.ceil(latToY(cMinLat, zoom));
-
+  const xMin = Math.floor(lonToX(minLng, zoom));
+  const xMax = Math.ceil(lonToX(maxLng, zoom));
+  const yMin = Math.floor(latToY(maxLat, zoom));
+  const yMax = Math.ceil(latToY(minLat, zoom));
   const tileCountX = xMax - xMin;
   const tileCountY = yMax - yMin;
 
-  // Limit tile count to avoid giant images
+  // Too many tiles → centered fallback at lower zoom
   if (tileCountX > 6 || tileCountY > 6) {
-    // Too zoomed out — use center point with lower zoom
     return generateCenteredMap(stops, width, height);
   }
 
-  // Fetch all tiles
+  const fullW = tileCountX * 256;
+  const fullH = tileCountY * 256;
+
+  // Step 1: Fetch & compose tiles into base image
   const tilePromises: Promise<Buffer>[] = [];
   for (let ty = yMin; ty < yMax; ty++) {
     for (let tx = xMin; tx < xMax; tx++) {
@@ -106,7 +110,6 @@ async function generateStaticMap(
   }
   const tileBuffers = await Promise.all(tilePromises);
 
-  // Compose into one image
   const compositeInputs: sharp.OverlayOptions[] = [];
   for (let i = 0; i < tileBuffers.length; i++) {
     const tx = xMin + (i % tileCountX);
@@ -118,61 +121,64 @@ async function generateStaticMap(
     }
   }
 
-  const fullW = tileCountX * 256;
-  const fullH = tileCountY * 256;
-
   const base = sharp({
-    create: { width: fullW, height: fullH, channels: 3, background: { r: 240, g: 240, b: 240 } },
+    create: {
+      width: fullW,
+      height: fullH,
+      channels: 3,
+      background: { r: 240, g: 240, b: 240 },
+    },
   });
+  if (compositeInputs.length > 0) base.composite(compositeInputs);
 
-  if (compositeInputs.length > 0) {
-    base.composite(compositeInputs);
-  }
+  const mapImage = await base.png().toBuffer();
 
-  // Add pin markers as SVG overlay
+  // Step 2: Resize to target dimensions
+  const resized = await sharp(mapImage)
+    .resize(width, height, { fit: "cover" })
+    .png()
+    .toBuffer();
+
+  // Step 3: Overlay pin markers on resized image (scaled coords)
+  const scaleX = width / fullW;
+  const scaleY = height / fullH;
   const pinsSvg = stops
     .map((s) => {
-      const px = (lonToX(s.lng, zoom) - xMin) * 256;
-      const py = (latToY(s.lat, zoom) - yMin) * 256;
-      return `<circle cx="${px}" cy="${py}" r="8" fill="#b85c3a" stroke="#fff" stroke-width="2.5"/>`;
+      const px = (lonToX(s.lng, zoom) - xMin) * 256 * scaleX;
+      const py = (latToY(s.lat, zoom) - yMin) * 256 * scaleY;
+      return `<circle cx="${px}" cy="${py}" r="6" fill="#b85c3a" stroke="#fff" stroke-width="2"/>`;
     })
     .join("");
 
   const svgOverlay = Buffer.from(
-    `<svg width="${fullW}" height="${fullH}">${pinsSvg}</svg>`
+    `<svg width="${width}" height="${height}">${pinsSvg}</svg>`
   );
 
-  base.composite([{ input: svgOverlay, left: 0, top: 0 }]);
-
-  // Calculate focus area (center of all stops) and resize to fit
-  const result = await base
-    .resize(width, height, { fit: "cover", position: "attention" })
+  return sharp(resized)
+    .composite([{ input: svgOverlay, left: 0, top: 0 }])
     .png()
     .toBuffer();
-
-  return result;
 }
 
 async function generateCenteredMap(
-  stops: { lat: number; lng: number; title: string }[],
+  stops: { lat: number; lng: number }[],
   width: number,
   height: number
-): Promise<Buffer | null> {
-  // Single-center approach for zoomed-out views
+): Promise<Buffer> {
   const centerLat = stops.reduce((s, p) => s + p.lat, 0) / stops.length;
   const centerLng = stops.reduce((s, p) => s + p.lng, 0) / stops.length;
   const zoom = 6;
 
   const xCenter = Math.floor(lonToX(centerLng, zoom));
   const yCenter = Math.floor(latToY(centerLat, zoom));
-
   const xMin = xCenter - 1;
   const xMax = xCenter + 2;
   const yMin = yCenter - 1;
   const yMax = yCenter + 2;
-
   const tileCountX = xMax - xMin;
   const tileCountY = yMax - yMin;
+  const fullW = tileCountX * 256;
+  const fullH = tileCountY * 256;
 
   const tilePromises: Promise<Buffer>[] = [];
   for (let ty = yMin; ty < yMax; ty++) {
@@ -186,47 +192,52 @@ async function generateCenteredMap(
   for (let i = 0; i < tileBuffers.length; i++) {
     const tx = xMin + (i % tileCountX);
     const ty = yMin + Math.floor(i / tileCountX);
-    const px = (tx - xMin) * 256;
-    const py = (ty - yMin) * 256;
     if (tileBuffers[i].length > 1000) {
-      compositeInputs.push({ input: tileBuffers[i], left: px, top: py });
+      compositeInputs.push({
+        input: tileBuffers[i],
+        left: (tx - xMin) * 256,
+        top: (ty - yMin) * 256,
+      });
     }
   }
 
-  const fullW = tileCountX * 256;
-  const fullH = tileCountY * 256;
-
   const base = sharp({
-    create: { width: fullW, height: fullH, channels: 3, background: { r: 240, g: 240, b: 240 } },
+    create: {
+      width: fullW,
+      height: fullH,
+      channels: 3,
+      background: { r: 240, g: 240, b: 240 },
+    },
   });
+  if (compositeInputs.length > 0) base.composite(compositeInputs);
 
-  if (compositeInputs.length > 0) {
-    base.composite(compositeInputs);
-  }
-
-  const pinsSvg = stops
-    .map((s) => {
-      const px = (lonToX(s.lng, zoom) - xMin) * 256;
-      const py = (latToY(s.lat, zoom) - yMin) * 256;
-      return `<circle cx="${px}" cy="${py}" r="7" fill="#b85c3a" stroke="#fff" stroke-width="2"/>`;
-    })
-    .join("");
-
-  const svgOverlay = Buffer.from(
-    `<svg width="${fullW}" height="${fullH}">${pinsSvg}</svg>`
-  );
-
-  base.composite([{ input: svgOverlay, left: 0, top: 0 }]);
-
-  const result = await base
+  const mapImage = await base.png().toBuffer();
+  const resized = await sharp(mapImage)
     .resize(width, height, { fit: "cover" })
     .png()
     .toBuffer();
 
-  return result;
+  const scaleX = width / fullW;
+  const scaleY = height / fullH;
+  const pinsSvg = stops
+    .map((s) => {
+      const px = (lonToX(s.lng, zoom) - xMin) * 256 * scaleX;
+      const py = (latToY(s.lat, zoom) - yMin) * 256 * scaleY;
+      return `<circle cx="${px}" cy="${py}" r="5" fill="#b85c3a" stroke="#fff" stroke-width="1.5"/>`;
+    })
+    .join("");
+
+  const svgOverlay = Buffer.from(
+    `<svg width="${width}" height="${height}">${pinsSvg}</svg>`
+  );
+
+  return sharp(resized)
+    .composite([{ input: svgOverlay, left: 0, top: 0 }])
+    .png()
+    .toBuffer();
 }
 
-// ─── PDF generation ───
+// ─── PDF ───
 
 function checkPageSpace(doc: typeof PDFDocument.prototype, needed: number) {
   const bottomMargin = doc.page.height - doc.page.margins.bottom - 40;
@@ -254,22 +265,21 @@ export async function GET(
 
   const plan = serializeReadModel(result.value);
 
-  // Collect all stops with coordinates for map
-  const allStops: { lat: number; lng: number; title: string }[] = [];
+  // Collect stops with coordinates for map
+  const allStops: { lat: number; lng: number }[] = [];
   for (const day of plan.days) {
     for (const stop of day.stops) {
       if (stop.lat && stop.lng) {
-        allStops.push({ lat: stop.lat, lng: stop.lng, title: stop.title });
+        allStops.push({ lat: stop.lat, lng: stop.lng });
       }
     }
   }
 
-  // Generate static map (non-blocking — falls back to no-map on error)
   let mapImage: Buffer | null = null;
   try {
     mapImage = await generateStaticMap(allStops);
   } catch {
-    // Continue without map
+    // continue without map
   }
 
   const chunks: Buffer[] = [];
@@ -277,118 +287,153 @@ export async function GET(
     size: "A4",
     margins: { top: 50, bottom: 60, left: 55, right: 55 },
     bufferPages: true,
-    info: {
-      Title: plan.title,
-      Author: "TuristGuide",
-      Creator: "TuristGuide",
-    },
+    info: { Title: plan.title, Author: "TuristGuide", Creator: "TuristGuide" },
   });
 
   doc.registerFont("NotoSans", FONT_REGULAR);
   doc.registerFont("NotoSansBold", FONT_BOLD);
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
 
-  const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const pageWidth =
+    doc.page.width - doc.page.margins.left - doc.page.margins.right;
 
-  // ─── Title block ───
-  doc.rect(0, 0, doc.page.width, 85).fill(C.headerBg);
-  doc.moveTo(0, 85).lineTo(doc.page.width, 85).strokeColor(C.divider).lineWidth(1).stroke();
-  doc.font("NotoSansBold").fontSize(22).fillColor(C.text).text(plan.title, 55, 30, { align: "center", width: pageWidth });
+  // ─── Title ───
+  doc.rect(0, 0, doc.page.width, 80).fill(C.headerBg);
+  doc
+    .moveTo(0, 80)
+    .lineTo(doc.page.width, 80)
+    .strokeColor(C.divider)
+    .lineWidth(1)
+    .stroke();
+  doc
+    .font("NotoSansBold")
+    .fontSize(22)
+    .fillColor(C.text)
+    .text(plan.title, 55, 25, { align: "center", width: pageWidth });
   if (plan.description) {
     doc.moveDown(0.2);
-    doc.font("NotoSans").fontSize(9).fillColor(C.muted).text(plan.description, { align: "center", width: pageWidth });
+    doc
+      .font("NotoSans")
+      .fontSize(9)
+      .fillColor(C.muted)
+      .text(plan.description, { align: "center", width: pageWidth });
   }
-  doc.y = 100;
+  doc.y = 95;
 
-  // ─── Map image ───
+  // ─── Map ───
   if (mapImage) {
-    checkPageSpace(doc, 260);
-    doc.image(mapImage, doc.page.margins.left, doc.y, { width: pageWidth, height: 250 });
-    doc.y += 260;
+    checkPageSpace(doc, 220);
+    doc.image(mapImage, doc.page.margins.left, doc.y, {
+      width: pageWidth,
+      height: 200,
+    });
+    doc.y += 210;
   }
 
-  // ─── Days & Stops ───
+  // ─── Days ───
   for (const day of plan.days) {
-    checkPageSpace(doc, 65);
+    checkPageSpace(doc, 55);
 
-    // Day header — subtle wash
     const dayTitle = `Dzie\u0144 ${day.dayNumber}${day.title ? `: ${day.title}` : ""}`;
     const barY = doc.y;
-    doc.rect(doc.page.margins.left - 5, barY, pageWidth + 10, 24).fill(C.dayBar);
-    doc.font("NotoSansBold").fontSize(11).fillColor(C.dark).text(dayTitle, doc.page.margins.left, barY + 5, { width: pageWidth });
-    doc.y = barY + 30;
+    doc
+      .rect(doc.page.margins.left - 5, barY, pageWidth + 10, 22)
+      .fill(C.dayBar);
+    doc
+      .font("NotoSansBold")
+      .fontSize(11)
+      .fillColor(C.dark)
+      .text(dayTitle, doc.page.margins.left, barY + 4, { width: pageWidth });
+    doc.y = barY + 28;
 
     if (day.description) {
-      doc.font("NotoSans").fontSize(8.5).fillColor(C.muted).text(day.description, { width: pageWidth });
+      doc
+        .font("NotoSans")
+        .fontSize(8.5)
+        .fillColor(C.muted)
+        .text(day.description, { width: pageWidth });
       doc.moveDown(0.2);
     }
 
     for (const stop of day.stops) {
-      checkPageSpace(doc, 45);
+      checkPageSpace(doc, 40);
 
-      // Stop title
       doc.font("NotoSansBold").fontSize(10).fillColor(C.text).text(stop.title);
 
-      // Details
       const parts: string[] = [];
       if (stop.summary) parts.push(stop.summary);
       if (stop.duration) {
         const d = stop.duration;
-        parts.push(`${d.min}${d.max && d.max !== d.min ? `\u2013${d.max}` : ""} min`);
+        parts.push(
+          `${d.min}${d.max && d.max !== d.min ? `\u2013${d.max}` : ""} min`
+        );
       }
-      if (stop.cost) {
-        parts.push(`${stop.cost.amount} ${stop.cost.currency}`);
-      }
+      if (stop.cost) parts.push(`${stop.cost.amount} ${stop.cost.currency}`);
       if (stop.bestTime) parts.push(stop.bestTime);
 
       if (parts.length > 0) {
-        doc.font("NotoSans").fontSize(8.5).fillColor(C.muted).text(parts.join("  \u00b7  "), { width: pageWidth });
+        doc
+          .font("NotoSans")
+          .fontSize(8.5)
+          .fillColor(C.muted)
+          .text(parts.join("  \u00b7  "), { width: pageWidth });
       }
 
       if (stop.warnings?.length) {
-        doc.font("NotoSans").fontSize(7.5).fillColor(C.warning).text(`\u26a0 ${stop.warnings.join(", ")}`);
+        doc
+          .font("NotoSans")
+          .fontSize(7.5)
+          .fillColor(C.warning)
+          .text(`\u26a0 ${stop.warnings.join(", ")}`);
       }
 
       if (stop.bring?.length) {
-        doc.font("NotoSans").fontSize(7.5).fillColor(C.light).text(`Zabierz: ${stop.bring.join(", ")}`);
+        doc
+          .font("NotoSans")
+          .fontSize(7.5)
+          .fillColor(C.light)
+          .text(`Zabierz: ${stop.bring.join(", ")}`);
       }
 
       if (stop.googleMapsUrl) {
-        doc.font("NotoSans").fontSize(7.5).fillColor(C.accent).text(stop.googleMapsUrl, { link: stop.googleMapsUrl });
+        doc
+          .font("NotoSans")
+          .fontSize(7.5)
+          .fillColor(C.accent)
+          .text(stop.googleMapsUrl, { link: stop.googleMapsUrl });
       }
 
-      // Separator
       doc.moveDown(0.15);
-      doc.moveTo(doc.page.margins.left + 8, doc.y).lineTo(doc.page.margins.left + pageWidth - 8, doc.y).strokeColor("#ebebeb").lineWidth(0.3).stroke();
-      doc.moveDown(0.3);
+      doc
+        .moveTo(doc.page.margins.left + 8, doc.y)
+        .lineTo(doc.page.margins.left + pageWidth - 8, doc.y)
+        .strokeColor("#ebebeb")
+        .lineWidth(0.3)
+        .stroke();
+      doc.moveDown(0.25);
     }
 
     doc.moveDown(0.4);
   }
 
-  // ─── Footer on each page ───
-  const totalPages = doc.bufferedPageRange();
-  for (let i = 0; i < totalPages.count; i++) {
+  // ─── Footer ───
+  const range = doc.bufferedPageRange();
+  for (let i = 0; i < range.count; i++) {
     doc.switchToPage(i);
-    const bottom = doc.page.height - 35;
-    doc.font("NotoSans").fontSize(7).fillColor(C.light);
-    doc.text(
-      `turistguide.karwackid.cloud`,
-      doc.page.margins.left,
-      bottom,
-      { width: pageWidth, align: "center" }
-    );
+    doc
+      .font("NotoSans")
+      .fontSize(7)
+      .fillColor(C.light)
+      .text("turistguide.karwackid.cloud", doc.page.margins.left, doc.page.height - 35, {
+        width: pageWidth,
+        align: "center",
+      });
   }
 
   doc.end();
+  await new Promise<void>((resolve) => doc.on("end", resolve));
 
-  await new Promise<void>((resolve) => {
-    doc.on("end", resolve);
-  });
-
-  const pdfBuffer = Buffer.concat(chunks);
-
-  return new NextResponse(pdfBuffer, {
+  return new NextResponse(Buffer.concat(chunks), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
