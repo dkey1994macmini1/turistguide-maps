@@ -686,6 +686,12 @@ button {
   align-items: center;
 }
 
+.plan-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .toggle-switch {
   position: relative;
   width: 32px;
