@@ -144,15 +144,9 @@ async function generateStaticMap(
 
   base.composite([{ input: svgOverlay, left: 0, top: 0 }]);
 
-  // Crop to viewport around the stops with padding
-  const cropX = Math.max(0, Math.floor((lonToX(cMinLng, zoom) - xMin) * 256 - 20));
-  const cropY = Math.max(0, Math.floor((latToY(cMaxLat, zoom) - yMin) * 256 - 20));
-  const cropW = Math.min(fullW - cropX, Math.ceil((lonToX(cMaxLng, zoom) - xMin) * 256 + 20 - cropX));
-  const cropH = Math.min(fullH - cropY, Math.ceil((latToY(cMinLat, zoom) - yMin) * 256 + 20 - cropY));
-
+  // Calculate focus area (center of all stops) and resize to fit
   const result = await base
-    .extract({ left: cropX, top: cropY, width: cropW, height: cropH })
-    .resize(width, height, { fit: "cover" })
+    .resize(width, height, { fit: "cover", position: "attention" })
     .png()
     .toBuffer();
 
