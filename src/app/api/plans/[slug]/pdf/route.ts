@@ -82,26 +82,36 @@ async function generateDayMap(
   const minLng = Math.min(...stops.map((s) => s.lng)) - pad;
   const maxLng = Math.max(...stops.map((s) => s.lng)) + pad;
 
-  const zoom = chooseZoom(stops);
-  const xMin = Math.floor(lonToX(minLng, zoom));
-  const xMax = Math.ceil(lonToX(maxLng, zoom));
-  const yMin = Math.floor(latToY(maxLat, zoom));
-  const yMax = Math.ceil(latToY(minLat, zoom));
-  const tileCountX = xMax - xMin;
-  const tileCountY = yMax - yMin;
+  // Try decreasing zoom levels until we get ≤6×6 tiles
+  let zoom = chooseZoom(stops);
+  let tileCountX: number;
+  let tileCountY: number;
+  let xMin: number;
+  let xMax: number;
+  let yMin: number;
+  let yMax: number;
 
-  // Too many tiles → use lower zoom
-  if (tileCountX > 6 || tileCountY > 6) {
-    return generateDayMap(stops, width, height); // won't recurse because chooseZoom returns lower
+  for (let attempt = 0; attempt < 6; attempt++) {
+    xMin = Math.floor(lonToX(minLng, zoom));
+    xMax = Math.ceil(lonToX(maxLng, zoom));
+    yMin = Math.floor(latToY(maxLat, zoom));
+    yMax = Math.ceil(latToY(minLat, zoom));
+    tileCountX = xMax - xMin;
+    tileCountY = yMax - yMin;
+    if (tileCountX <= 6 && tileCountY <= 6) break;
+    zoom--;
   }
 
-  const fullW = tileCountX * 256;
-  const fullH = tileCountY * 256;
+  // Final check — if still too many tiles, skip map
+  if (tileCountX! > 6 || tileCountY! > 6) return null;
+
+  const fullW = tileCountX! * 256;
+  const fullH = tileCountY! * 256;
 
   // Step 1: Fetch tiles & compose
   const tilePromises: Promise<Buffer>[] = [];
-  for (let ty = yMin; ty < yMax; ty++) {
-    for (let tx = xMin; tx < xMax; tx++) {
+  for (let ty = yMin!; ty < yMax!; ty++) {
+    for (let tx = xMin!; tx < xMax!; tx++) {
       tilePromises.push(fetchTile(zoom, tx, ty));
     }
   }
@@ -109,16 +119,16 @@ async function generateDayMap(
 
   const compositeInputs: sharp.OverlayOptions[] = [];
   for (let i = 0; i < tileBuffers.length; i++) {
-    const tx = xMin + (i % tileCountX);
-    const ty = yMin + Math.floor(i / tileCountX);
+    const tx = xMin! + (i % tileCountX!);
+    const ty = yMin! + Math.floor(i / tileCountX!);
     if (tileBuffers[i].length > 1000) {
-      compositeInputs.push({ input: tileBuffers[i], left: (tx - xMin) * 256, top: (ty - yMin) * 256 });
+      compositeInputs.push({ input: tileBuffers[i], left: (tx - xMin!) * 256, top: (ty - yMin!) * 256 });
     }
   }
 
   if (compositeInputs.length === 0) return null;
 
-  const base = sharp({ create: { width: fullW, height: fullH, channels: 3, background: { r: 240, g: 240, b: 240 } } });
+  const base = sharp({ create: { width: fullW!, height: fullH!, channels: 3, background: { r: 240, g: 240, b: 240 } } });
   base.composite(compositeInputs);
   const mapImage = await base.png().toBuffer();
 
@@ -126,14 +136,14 @@ async function generateDayMap(
   const resized = await sharp(mapImage).resize(width, height, { fit: "cover" }).jpeg({ quality: 80 }).toBuffer();
 
   // Step 3: Overlay numbered pins
-  const scaleX = width / fullW;
-  const scaleY = height / fullH;
+  const scaleX = width / fullW!;
+  const scaleY = height / fullH!;
 
   // Numbered pins: 1, 2, 3...
   const pinsSvg = stops
     .map((s, idx) => {
-      const px = (lonToX(s.lng, zoom) - xMin) * 256 * scaleX;
-      const py = (latToY(s.lat, zoom) - yMin) * 256 * scaleY;
+      const px = (lonToX(s.lng, zoom) - xMin!) * 256 * scaleX;
+      const py = (latToY(s.lat, zoom) - yMin!) * 256 * scaleY;
       const num = idx + 1;
       return `
         <circle cx="${px}" cy="${py}" r="10" fill="#b85c3a" stroke="#fff" stroke-width="2"/>
@@ -148,13 +158,6 @@ async function generateDayMap(
 }
 
 // ─── PDF ───
-
-function checkPageSpace(doc: typeof PDFDocument.prototype, needed: number) {
-  const bottomMargin = doc.page.height - doc.page.margins.bottom - 40;
-  if (doc.y + needed > bottomMargin) {
-    doc.addPage();
-  }
-}
 
 export async function GET(
   _request: Request,
@@ -193,7 +196,6 @@ export async function GET(
   const doc = new PDFDocument({
     size: "A4",
     margins: { top: 50, bottom: 60, left: 55, right: 55 },
-    bufferPages: true,
     info: { Title: plan.title, Author: "TuristGuide", Creator: "TuristGuide" },
   });
 
@@ -202,6 +204,24 @@ export async function GET(
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
 
   const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const footerY = doc.page.height - 35;
+
+  // Draw footer on current page — temporarily set bottom margin to 0
+  // to prevent PDFKit from auto-adding a page when drawing near the bottom
+  const drawFooter = () => {
+    const origBottom = doc.page.margins.bottom;
+    doc.page.margins.bottom = 0;
+    doc.font("NotoSans").fontSize(7).fillColor(C.light)
+      .text("turistguide.karwackid.cloud", doc.page.margins.left, footerY, {
+        width: pageWidth, align: "center", lineBreak: false,
+      });
+    doc.page.margins.bottom = origBottom;
+  };
+
+  // Draw footer on page 1
+  drawFooter();
+  // Reset cursor after footer (don't leave doc.y at footer position)
+  doc.y = 50;
 
   // ─── Title ───
   doc.rect(0, 0, doc.page.width, 80).fill(C.headerBg);
@@ -214,12 +234,16 @@ export async function GET(
   doc.y = 100;
 
   // ─── Days ───
+  const bottomLimit = () => doc.page.height - doc.page.margins.bottom - 15;
+
   for (let dayIdx = 0; dayIdx < plan.days.length; dayIdx++) {
     const day = plan.days[dayIdx];
     const dayMap = dayMaps[dayIdx];
 
-    // Each day starts with fresh page space (map is ~210px + header ~55px + stops)
-    checkPageSpace(doc, dayMap ? 280 : 55);
+    // Each day starts on a fresh page
+    doc.addPage();
+    drawFooter();
+    doc.y = 50;
 
     // Day header
     const dayTitle = `Dzie\u0144 ${day.dayNumber}${day.title ? `: ${day.title}` : ""}`;
@@ -235,6 +259,11 @@ export async function GET(
 
     // Per-day map
     if (dayMap) {
+      if (doc.y + 200 > bottomLimit()) {
+        doc.addPage();
+        drawFooter();
+        doc.y = 50;
+      }
       const mapY = doc.y;
       doc.image(dayMap, doc.page.margins.left, mapY, { width: pageWidth, height: 200 });
       doc.y = mapY + 210;
@@ -242,9 +271,13 @@ export async function GET(
 
     // Stops
     for (const stop of day.stops) {
-      checkPageSpace(doc, 40);
+      if (doc.y + 50 > bottomLimit()) {
+        doc.addPage();
+        drawFooter();
+        doc.y = 50;
+      }
 
-      doc.font("NotoSansBold").fontSize(10).fillColor(C.text).text(stop.title);
+      doc.font("NotoSansBold").fontSize(10).fillColor(C.text).text(stop.title, { width: pageWidth });
 
       const parts: string[] = [];
       if (stop.summary) parts.push(stop.summary);
@@ -275,17 +308,6 @@ export async function GET(
       doc.moveTo(doc.page.margins.left + 8, doc.y).lineTo(doc.page.margins.left + pageWidth - 8, doc.y).strokeColor("#ebebeb").lineWidth(0.3).stroke();
       doc.moveDown(0.25);
     }
-
-    doc.moveDown(0.4);
-  }
-
-  // ─── Footer ───
-  const range = doc.bufferedPageRange();
-  for (let i = 0; i < range.count; i++) {
-    doc.switchToPage(i);
-    doc.font("NotoSans").fontSize(7).fillColor(C.light).text("turistguide.karwackid.cloud", doc.page.margins.left, doc.page.height - 35, {
-      width: pageWidth, align: "center",
-    });
   }
 
   doc.end();
