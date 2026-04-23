@@ -150,4 +150,37 @@ describe("StopDetail", () => {
     fireEvent.click(screen.getByText("Zwiń"));
     expect(screen.getByText("Czytaj więcej")).toBeInTheDocument();
   });
+
+  it("hides audio management buttons when audioManagement is false", () => {
+    const stopWithAudio = { ...baseStop, audioUrl: "/api/audio/stops/s1" };
+    render(<StopDetail stop={stopWithAudio} onClose={() => {}} audioManagement={false} />);
+
+    // Player should be visible (audio element with src)
+    const audioEl = document.querySelector("audio");
+    expect(audioEl).toBeInTheDocument();
+    expect(audioEl?.getAttribute("src")).toBe("/api/audio/stops/s1");
+    // Delete, regenerate, replace should be hidden
+    expect(screen.queryByTitle("Usuń audio")).not.toBeInTheDocument();
+    expect(screen.queryByTitle("Regeneruj audio (TTS)")).not.toBeInTheDocument();
+    expect(screen.queryByTitle("Zastąp plik audio")).not.toBeInTheDocument();
+  });
+
+  it("hides upload button when audioManagement is false and no audio exists", () => {
+    const stopNoAudio = { ...baseStop, audioUrl: null };
+    render(<StopDetail stop={stopNoAudio} onClose={() => {}} audioManagement={false} />);
+
+    // Generate audio button should still be visible
+    expect(screen.getByText("🔊 Generuj audio")).toBeInTheDocument();
+    // Upload button should be hidden
+    expect(screen.queryByText("Dodaj plik")).not.toBeInTheDocument();
+  });
+
+  it("shows audio management buttons when audioManagement is true", () => {
+    const stopWithAudio = { ...baseStop, audioUrl: "/api/audio/stops/s1" };
+    render(<StopDetail stop={stopWithAudio} onClose={() => {}} audioManagement={true} />);
+
+    expect(screen.getByTitle("Usuń audio")).toBeInTheDocument();
+    expect(screen.getByTitle("Regeneruj audio (TTS)")).toBeInTheDocument();
+    expect(screen.getByTitle("Zastąp plik audio")).toBeInTheDocument();
+  });
 });

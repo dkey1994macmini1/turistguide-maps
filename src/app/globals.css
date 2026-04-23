@@ -607,6 +607,69 @@ button {
   text-decoration: none;
 }
 
+/* Audio settings */
+.audio-settings {
+  flex-shrink: 0;
+}
+
+.audio-settings-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.audio-settings-text {
+  margin-right: 2px;
+}
+
+.plan-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.toggle-switch.toggle-on {
+  background: var(--color-primary);
+}
+
+.toggle-switch.toggle-off {
+  background: var(--color-border);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  transition: left 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.toggle-switch.toggle-on .toggle-knob {
+  left: 16px;
+}
+
+.toggle-switch.toggle-off .toggle-knob {
+  left: 2px;
+}
+
 /* Audio player + upload */
 .stop-detail-audio {
   margin: 8px 0;

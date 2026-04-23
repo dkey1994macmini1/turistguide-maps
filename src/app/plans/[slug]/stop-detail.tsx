@@ -6,6 +6,7 @@ import type { StopItem } from "@/types/api";
 interface StopDetailProps {
   stop: StopItem;
   onClose: () => void;
+  audioManagement?: boolean;
 }
 
 function hasStructuredData(stop: StopItem): boolean {
@@ -20,7 +21,7 @@ function hasStructuredData(stop: StopItem): boolean {
   );
 }
 
-export function StopDetail({ stop, onClose }: StopDetailProps) {
+export function StopDetail({ stop, onClose, audioManagement = true }: StopDetailProps) {
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [audioUrl, setAudioUrl] = useState(stop.audioUrl);
@@ -165,32 +166,36 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
         {audioUrl ? (
           <div className="stop-audio-player">
             <audio controls src={audioUrl} className="stop-audio-element" />
-            <button
-              className="stop-audio-delete"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={uploading || generating}
-              title="Usuń audio"
-            >
-              🗑
-            </button>
-            <button
-              className="stop-audio-regenerate"
-              onClick={() => { setTtsError(null); setShowTtsConfirm(true); }}
-              disabled={uploading || generating}
-              title="Regeneruj audio (TTS)"
-            >
-              🔊
-            </button>
-            <label className="stop-audio-replace" title="Zastąp plik audio">
-              📂
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={handleUpload}
-                disabled={uploading || generating}
-                style={{ display: "none" }}
-              />
-            </label>
+            {audioManagement && (
+              <>
+                <button
+                  className="stop-audio-delete"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={uploading || generating}
+                  title="Usuń audio"
+                >
+                  🗑
+                </button>
+                <button
+                  className="stop-audio-regenerate"
+                  onClick={() => { setTtsError(null); setShowTtsConfirm(true); }}
+                  disabled={uploading || generating}
+                  title="Regeneruj audio (TTS)"
+                >
+                  🔊
+                </button>
+                <label className="stop-audio-replace" title="Zastąp plik audio">
+                  📂
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleUpload}
+                    disabled={uploading || generating}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              </>
+            )}
           </div>
         ) : (
           <div className="stop-audio-actions">
@@ -203,16 +208,18 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
                 🔊 Generuj audio
               </button>
             )}
-            <label className="stop-audio-upload">
-              🎤 Dodaj plik
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={handleUpload}
-                disabled={uploading || generating}
-                style={{ display: "none" }}
-              />
-            </label>
+            {audioManagement && (
+              <label className="stop-audio-upload">
+                🎤 Dodaj plik
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleUpload}
+                  disabled={uploading || generating}
+                  style={{ display: "none" }}
+                />
+              </label>
+            )}
           </div>
         )}
 
@@ -236,7 +243,7 @@ export function StopDetail({ stop, onClose }: StopDetailProps) {
         )}
 
         {/* Delete confirm dialog */}
-        {showDeleteConfirm && (
+        {audioManagement && showDeleteConfirm && (
           <div className="stop-tts-confirm">
             <p className="stop-tts-confirm-text">
               Usunąć plik audio? Tej operacji nie można cofnąć.

@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { DaySwitcher } from "./day-switcher";
 import { StopList } from "./stop-list";
 import { StopDetail } from "./stop-detail";
+import { AudioSettings } from "./audio-settings";
 
 // Leaflet requires browser APIs — must skip SSR
 const TravelMap = dynamic(() => import("./travel-map").then((m) => ({ default: m.TravelMap })), {
@@ -23,6 +24,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+  const [audioManagement, setAudioManagement] = useState(true);
 
   useEffect(() => {
     setLoading(true);
@@ -105,7 +107,10 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
   return (
     <div className="plan-viewer">
       <header className="plan-header">
-        <a href="/" className="back-link">← Plans</a>
+        <div className="plan-header-row">
+          <a href="/" className="back-link">← Plans</a>
+          <AudioSettings enabled={audioManagement} onToggle={setAudioManagement} />
+        </div>
         <h1>{plan.title}</h1>
         <p className="plan-description">{plan.description}</p>
       </header>
@@ -139,7 +144,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
           )}
 
           {selectedStop && (
-            <StopDetail stop={selectedStop} onClose={handleCloseDetail} />
+            <StopDetail stop={selectedStop} onClose={handleCloseDetail} audioManagement={audioManagement} />
           )}
         </div>
       </div>
