@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { DaySwitcher } from "./day-switcher";
 import { StopList } from "./stop-list";
 import { StopDetail } from "./stop-detail";
-import { AudioSettings } from "./audio-settings";
+import { SettingsMenu } from "./settings-menu";
 import { OfflineDialog } from "@/features/offline/offline-dialog";
 import { OfflineBadge } from "@/features/offline/offline-badge";
 import { OfflineMap } from "@/features/offline/offline-map";
@@ -102,6 +102,21 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
     setSelectedStopId(null);
   }, []);
 
+  const handleOpenOfflineDialog = useCallback(() => {
+    setShowOfflineDialog(true);
+  }, []);
+
+  const handleCloseOfflineDialog = useCallback(() => {
+    setShowOfflineDialog(false);
+    // Refresh offline snapshot status
+    import("@/features/offline/db").then(({ getOfflinePlan }) => {
+      getOfflinePlan(slug).then((entry) => {
+        setHasOfflineSnapshot(entry !== null);
+        setOfflineDownloadedAt(entry?.downloadedAt ?? null);
+      });
+    });
+  }, [slug]);
+
   const dayBounds = useMemo(() => {
     if (!activeDay || activeDay.stops.length === 0) return null;
     const lats = activeDay.stops.map((s) => s.lat);
@@ -148,20 +163,18 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
               hasOfflineSnapshot={hasOfflineSnapshot}
               downloadedAt={offlineDownloadedAt}
             />
-            <AudioSettings enabled={audioManagement} onToggle={setAudioManagement} />
+            <SettingsMenu
+              audioEnabled={audioManagement}
+              onAudioToggle={setAudioManagement}
+              onSaveOffline={handleOpenOfflineDialog}
+              hasOfflineSnapshot={hasOfflineSnapshot}
+            />
           </div>
         </div>
         <h1>{plan.title}</h1>
-        <p className="plan-description">{plan.description}</p>
-        <div className="plan-header-row">
-          <button
-            className="btn btn-offline"
-            onClick={() => setShowOfflineDialog(true)}
-            title="Zapisz offline"
-          >
-            📲 Zapisz offline
-          </button>
-        </div>
+        {plan.description && (
+          <p className="plan-description">{plan.description}</p>
+        )}
       </header>
 
       <div className="plan-body">
@@ -206,39 +219,10 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
         <OfflineDialog
           slug={slug}
           plan={plan}
-          onClose={() => {
-            setShowOfflineDialog(false);
-            // Refresh offline snapshot status
-            import("@/features/offline/db").then(({ getOfflinePlan }) => {
-              getOfflinePlan(slug).then((entry) => {
-                setHasOfflineSnapshot(entry !== null);
-                setOfflineDownloadedAt(entry?.downloadedAt ?? null);
-              });
-            });
-          }}
+          onClose={handleCloseOfflineDialog}
           mapContainer={mapContainerRef.current}
         />
       )}
-
-      <style>{`
-        .plan-header-actions {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .btn-offline {
-          font-size: 0.85rem;
-          padding: 4px 12px;
-          background: #2d6a4f;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-        }
-        .btn-offline:hover {
-          background: #40916c;
-        }
-      `}</style>
     </div>
   );
 }
