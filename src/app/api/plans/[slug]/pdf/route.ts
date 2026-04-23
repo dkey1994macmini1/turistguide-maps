@@ -6,7 +6,7 @@ import { ReadModelPort } from "@/core/ports/read-model-port";
 import { AppLayer } from "@/composition-root";
 import { serializeReadModel } from "../../../serializers";
 
-const FONTS_DIR = path.join(__dirname, "fonts");
+const FONTS_DIR = path.join(process.cwd(), "public", "pdf-fonts");
 const FONT_REGULAR = path.join(FONTS_DIR, "NotoSans-Regular.ttf");
 const FONT_BOLD = path.join(FONTS_DIR, "NotoSans-Bold.ttf");
 
