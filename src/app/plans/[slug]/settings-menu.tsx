@@ -7,6 +7,7 @@ interface SettingsMenuProps {
   onAudioToggle: (value: boolean) => void;
   onSaveOffline: () => void;
   hasOfflineSnapshot: boolean;
+  slug: string;
 }
 
 export function SettingsMenu({
@@ -14,6 +15,7 @@ export function SettingsMenu({
   onAudioToggle,
   onSaveOffline,
   hasOfflineSnapshot,
+  slug,
 }: SettingsMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -32,6 +34,11 @@ export function SettingsMenu({
   const handleSaveOffline = () => {
     setOpen(false);
     onSaveOffline();
+  };
+
+  const handleSharePdf = () => {
+    setOpen(false);
+    window.open(`/api/plans/${slug}/pdf`, "_blank");
   };
 
   return (
@@ -60,6 +67,9 @@ export function SettingsMenu({
           <hr className="settings-menu-divider" />
           <button className="settings-menu-action" onClick={handleSaveOffline}>
             📲 {hasOfflineSnapshot ? "Aktualizuj offline" : "Zapisz offline"}
+          </button>
+          <button className="settings-menu-action" onClick={handleSharePdf}>
+            📄 Udostępnij PDF
           </button>
         </div>
       )}

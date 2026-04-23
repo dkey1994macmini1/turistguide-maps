@@ -168,6 +168,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
               onAudioToggle={setAudioManagement}
               onSaveOffline={handleOpenOfflineDialog}
               hasOfflineSnapshot={hasOfflineSnapshot}
+              slug={slug}
             />
           </div>
         </div>
