@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { PlanReadModel, DayWithStops, StopItem } from "@/types/api";
 import dynamic from "next/dynamic";
 import { DaySwitcher } from "./day-switcher";
 import { StopList } from "./stop-list";
 import { StopDetail } from "./stop-detail";
 import { AudioSettings } from "./audio-settings";
+import { OfflineDialog } from "@/features/offline/offline-dialog";
+import { OfflineBadge } from "@/features/offline/offline-badge";
+import { OfflineMap } from "@/features/offline/offline-map";
 
 // Leaflet requires browser APIs — must skip SSR
 const TravelMap = dynamic(() => import("./travel-map").then((m) => ({ default: m.TravelMap })), {
@@ -25,7 +28,15 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [audioManagement, setAudioManagement] = useState(false);
+  const [showOfflineDialog, setShowOfflineDialog] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
+  const [hasOfflineSnapshot, setHasOfflineSnapshot] = useState(false);
+  const [offlineDownloadedAt, setOfflineDownloadedAt] = useState<string | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
+  // Fetch plan from API
   useEffect(() => {
     setLoading(true);
     fetch(`/api/plans/${slug}`)
@@ -41,6 +52,28 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
         setPlan(null);
         setLoading(false);
       });
+  }, [slug]);
+
+  // Online/offline detection
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  // Check offline snapshot availability
+  useEffect(() => {
+    import("@/features/offline/db").then(({ getOfflinePlan }) => {
+      getOfflinePlan(slug).then((entry) => {
+        setHasOfflineSnapshot(entry !== null);
+        setOfflineDownloadedAt(entry?.downloadedAt ?? null);
+      });
+    });
   }, [slug]);
 
   const days = plan?.days ?? [];
@@ -109,23 +142,43 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
       <header className="plan-header">
         <div className="plan-header-row">
           <a href="/" className="back-link">← Plans</a>
-          <AudioSettings enabled={audioManagement} onToggle={setAudioManagement} />
+          <div className="plan-header-actions">
+            <OfflineBadge
+              isOnline={isOnline}
+              hasOfflineSnapshot={hasOfflineSnapshot}
+              downloadedAt={offlineDownloadedAt}
+            />
+            <AudioSettings enabled={audioManagement} onToggle={setAudioManagement} />
+          </div>
         </div>
         <h1>{plan.title}</h1>
         <p className="plan-description">{plan.description}</p>
+        <div className="plan-header-row">
+          <button
+            className="btn btn-offline"
+            onClick={() => setShowOfflineDialog(true)}
+            title="Zapisz offline"
+          >
+            📲 Zapisz offline
+          </button>
+        </div>
       </header>
 
       <div className="plan-body">
-        <div className="map-section">
-          <TravelMap
-            activeDay={activeDay}
-            allDays={days}
-            selectedStopId={selectedStopId}
-            mapCenter={mapCenter}
-            dayBounds={dayBounds}
-            onMarkerClick={handleMarkerClick}
-            onMapClick={handleCloseDetail}
-          />
+        <div className="map-section" ref={mapContainerRef}>
+          {isOnline ? (
+            <TravelMap
+              activeDay={activeDay}
+              allDays={days}
+              selectedStopId={selectedStopId}
+              mapCenter={mapCenter}
+              dayBounds={dayBounds}
+              onMarkerClick={handleMarkerClick}
+              onMapClick={handleCloseDetail}
+            />
+          ) : (
+            <OfflineMap slug={slug} alt={`Mapa offline — ${plan.title}`} />
+          )}
         </div>
 
         <div className="sidebar">
@@ -148,6 +201,44 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
           )}
         </div>
       </div>
+
+      {showOfflineDialog && (
+        <OfflineDialog
+          slug={slug}
+          plan={plan}
+          onClose={() => {
+            setShowOfflineDialog(false);
+            // Refresh offline snapshot status
+            import("@/features/offline/db").then(({ getOfflinePlan }) => {
+              getOfflinePlan(slug).then((entry) => {
+                setHasOfflineSnapshot(entry !== null);
+                setOfflineDownloadedAt(entry?.downloadedAt ?? null);
+              });
+            });
+          }}
+          mapContainer={mapContainerRef.current}
+        />
+      )}
+
+      <style>{`
+        .plan-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .btn-offline {
+          font-size: 0.85rem;
+          padding: 4px 12px;
+          background: #2d6a4f;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+        .btn-offline:hover {
+          background: #40916c;
+        }
+      `}</style>
     </div>
   );
 }
