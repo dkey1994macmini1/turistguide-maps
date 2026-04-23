@@ -24,7 +24,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
-  const [audioManagement, setAudioManagement] = useState(true);
+  const [audioManagement, setAudioManagement] = useState(false);
 
   useEffect(() => {
     setLoading(true);
