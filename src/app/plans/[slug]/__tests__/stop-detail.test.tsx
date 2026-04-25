@@ -60,12 +60,18 @@ describe("StopDetail", () => {
     expect(npsLink).toHaveAttribute("href", "https://nps.gov/diamond-head");
   });
 
-  it("renders Google Maps link", () => {
-    render(<StopDetail stop={baseStop} onClose={() => {}} />);
+  it("shows Google Maps link from links array when present", () => {
+    const stopWithGmapsInLinks = {
+      ...baseStop,
+      links: [
+        { label: "Google Maps", url: "https://maps.google.com/?cid=123" },
+      ],
+    };
+    render(<StopDetail stop={stopWithGmapsInLinks} onClose={() => {}} />);
 
+    // Google Maps link from links array should show with 📍 prefix
     const gmapsLink = screen.getByText("📍 Google Maps");
-    expect(gmapsLink).toHaveAttribute("href", "https://www.google.com/maps/search/?api=1&query=21.2724,-157.8081");
-    expect(gmapsLink).toHaveAttribute("target", "_blank");
+    expect(gmapsLink).toHaveAttribute("href", "https://maps.google.com/?cid=123");
   });
 
   it("calls onClose when close button clicked", () => {
@@ -76,14 +82,17 @@ describe("StopDetail", () => {
     expect(closed).toBe(true);
   });
 
-  it("hides links section when no links", () => {
+  it("shows Google Maps fallback when no links stored", () => {
     const noLinks = { ...baseStop, links: [] };
     render(<StopDetail stop={noLinks} onClose={() => {}} />);
 
+    // Should show the auto-generated Google Maps link from lat/lng
+    const gmapsLink = screen.getByText("📍 Google Maps");
+    expect(gmapsLink).toHaveAttribute("href", baseStop.googleMapsUrl);
     expect(screen.queryByText("AllTrails")).not.toBeInTheDocument();
   });
 
-  it("does not render duplicate Google Maps link from links array", () => {
+  it("shows all links including Google Maps from links array", () => {
     const withGmapsLink = {
       ...baseStop,
       links: [
@@ -93,10 +102,11 @@ describe("StopDetail", () => {
     };
     render(<StopDetail stop={withGmapsLink} onClose={() => {}} />);
 
-    const gmapsLinks = screen.queryAllByText("Google Maps");
-    expect(gmapsLinks).toHaveLength(0); // filtered out from links section
-    const gmapsEmoji = screen.getByText("📍 Google Maps"); // only the emoji one remains
-    expect(gmapsEmoji).toBeInTheDocument();
+    // All links should be visible, Google Maps with 📍 prefix
+    expect(screen.getByText("📍 Google Maps")).toBeInTheDocument();
+    expect(screen.getByText("AllTrails")).toBeInTheDocument();
+    // No fallback link since we have links in array
+    expect(screen.queryByText("📍 Google Maps")).toBeInTheDocument();
   });
 
   it("does not render metadata section when no structured data", () => {

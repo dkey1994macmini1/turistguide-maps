@@ -290,34 +290,34 @@ export function StopDetail({ stop, onClose, audioManagement = true }: StopDetail
         </div>
       )}
 
-      {/* External links */}
-      {stop.links
-        .filter((link) => link.label !== "Google Maps")
-        .length > 0 && (
+      {/* All links - showing every link from stop.links */}
+      {stop.links.length > 0 && (
         <div className="stop-detail-links">
-          {stop.links
-            .filter((link) => link.label !== "Google Maps")
-            .map((link, i) => (
-              <a
-                key={i}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="stop-detail-link"
-              >
-                {link.label}
-              </a>
-            ))}
+          {stop.links.map((link, i) => (
+            <a
+              key={i}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="stop-detail-link"
+            >
+              {link.label === "Google Maps" ? "📍 " : ""}{link.label}
+            </a>
+          ))}
         </div>
       )}
-      <a
-        href={stop.googleMapsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="stop-detail-link"
-      >
-        📍 Google Maps
-      </a>
+
+      {/* Fallback: Google Maps link generated from lat/lng when no links stored */}
+      {stop.links.length === 0 && (
+        <a
+          href={stop.googleMapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="stop-detail-link"
+        >
+          📍 Google Maps
+        </a>
+      )}
     </div>
   );
 }
