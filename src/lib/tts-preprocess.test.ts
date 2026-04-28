@@ -83,20 +83,20 @@ describe("preprocessTtsText – skróty", () => {
 });
 
 describe("preprocessTtsText – liczby rzymskie z wiekiem", () => {
-  it("zamienia XIV wieku na czternastym wieku", () => {
-    expect(preprocessTtsText("Zamek z XIV wieku.")).toBe("Zamek z czternastym wieku.");
+  it("zamienia XIV wieku na czternastego wieku", () => {
+    expect(preprocessTtsText("Zamek z XIV wieku.")).toBe("Zamek z czternastego wieku(long-break)");
   });
 
-  it("zamienia X wieku na dziesiątym wieku", () => {
-    expect(preprocessTtsText("Budowla z X wieku.")).toBe("Budowla z dziesiątym wieku.");
+  it("zamienia X wieku na dziesiątego wieku", () => {
+    expect(preprocessTtsText("Budowla z X wieku.")).toBe("Budowla z dziesiątego wieku(long-break)");
   });
 
-  it("zamienia XVIII wieku na osiemnastym wieku", () => {
-    expect(preprocessTtsText("Styl z XVIII wieku.")).toBe("Styl z osiemnastym wieku.");
+  it("zamienia XVIII wieku na osiemnastego wieku", () => {
+    expect(preprocessTtsText("Styl z XVIII wieku.")).toBe("Styl z osiemnastego wieku(long-break)");
   });
 
   it("nie zamienia cyfr arabskich", () => {
-    expect(preprocessTtsText("W roku 1410.")).toBe("W roku 1410.");
+    expect(preprocessTtsText("W roku 1410.")).toBe("W roku 1410(long-break)");
   });
 
   it("nie zmienia tekstu bez 'wieku'", () => {

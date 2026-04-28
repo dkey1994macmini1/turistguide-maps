@@ -30,12 +30,12 @@ const ROMAN_PATTERN = new RegExp(
 );
 
 const ROMAN_TO_ORDINAL: Record<string, string> = {
-  I: "pierwszym", II: "drugim", III: "trzecim", IV: "czwartym",
-  V: "piątym", VI: "szóstym", VII: "siódmym", VIII: "ósmym",
-  IX: "dziewiątym", X: "dziesiątym", XI: "jedenastym", XII: "dwunastym",
-  XIII: "trzynastym", XIV: "czternastym", XV: "piętnastym",
-  XVI: "szesnastym", XVII: "siedemnastym", XVIII: "osiemnastym",
-  XIX: "dziewiętnastym", XX: "dwudziestym", XXI: "dwudziestym pierwszym",
+  I: "pierwszego", II: "drugiego", III: "trzeciego", IV: "czwartego",
+  V: "piątego", VI: "szóstego", VII: "siódmego", VIII: "ósmego",
+  IX: "dziewiątego", X: "dziesiątego", XI: "jedenastego", XII: "dwunastego",
+  XIII: "trzynastego", XIV: "czternastego", XV: "piętnastego",
+  XVI: "szesnastego", XVII: "siedemnastego", XVIII: "osiemnastego",
+  XIX: "dziewiętnastego", XX: "dwudziestego", XXI: "dwudziestego pierwszego",
 };
 
 // ── Polish number → words ──────────────────────────────────────────
