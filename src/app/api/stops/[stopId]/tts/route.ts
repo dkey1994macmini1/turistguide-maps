@@ -6,11 +6,8 @@ import { Effect } from "effect";
 import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
 import { AppLayer } from "@/composition-root";
 import { AUDIO_DIR } from "../audio-constants";
-import { preprocessTtsText, addEmotionTag, EMOTION_MAP } from "@/lib/tts-preprocess";
-
-const FISH_AUDIO_API = "https://api.fish.audio/v1/tts";
-const REFERENCE_ID_PL = "2532d01f4c59446d9e2144803b73e9da"; // Polish voice ref
-const REFERENCE_ID_EN = "bf322df2096a46f18c579d0baa36f41d"; // English voice ref
+import { preprocessTtsText } from "@/lib/tts-preprocess";
+import { fishAudioPrepare, callFishAudioTts, EMOTION_MAP } from "@/lib/adapters/fish-audio";
 
 // POST /api/stops/[stopId]/tts — generate audio via Fish Audio TTS
 export async function POST(
@@ -19,7 +16,6 @@ export async function POST(
 ) {
   const { stopId } = await params;
 
-  // Get stop to find description
   const stopResult = await Effect.runPromiseExit(
     Effect.gen(function* () {
       const repo = yield* StopRepositoryPort;
@@ -38,10 +34,10 @@ export async function POST(
     return NextResponse.json({ error: "Stop has no description to synthesize" }, { status: 400 });
   }
 
-  // Allow override: body can specify text, reference_id, language, and emotion tag
+  // Body overrides
   let bodyText: string | null = null;
   let bodyReferenceId: string | null = null;
-  let bodyLang: string = "pl"; // default Polish
+  let bodyLang: string = "pl";
   let bodyEmotion: string | null = null;
   try {
     const body = await request.json();
@@ -63,69 +59,29 @@ export async function POST(
 
   const effectiveLang: "pl" | "en" = bodyLang === "en" ? "en" : "pl";
   const rawDescription = bodyText ?? text;
-  // Normalize + emotion tag
-  const normalized = preprocessTtsText(rawDescription, effectiveLang);
-  const emotionTag = bodyEmotion ?? EMOTION_MAP.default;
-  const ttsText = addEmotionTag(normalized, effectiveLang === "pl" ? emotionTag : "");
-  const referenceId = bodyReferenceId ?? (effectiveLang === "pl" ? REFERENCE_ID_PL : REFERENCE_ID_EN);
 
-  // Call Fish Audio API
-  const apiKey = process.env.FISH_AUDIO_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "Fish Audio API key not configured" }, { status: 500 });
-  }
+  // Generic cleanup (provider-agnostic)
+  const cleaned = preprocessTtsText(rawDescription);
+
+  // Fish Audio-specific: pauses + emotion tag + voice ref
+  const { text: ttsText, referenceId } = fishAudioPrepare(cleaned, {
+    language: effectiveLang,
+    emotion: bodyEmotion ?? EMOTION_MAP.default,
+  });
+
+  const finalReferenceId = bodyReferenceId ?? referenceId;
 
   try {
-    const response = await fetch(FISH_AUDIO_API, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "model": "s2-pro",
-      },
-      body: JSON.stringify({
-        text: ttsText,
-        reference_id: referenceId,
-        temperature: 0.7,
-        top_p: 0.7,
-        prosody: { speed: 1, volume: 0, normalize_loudness: true },
-        chunk_length: 300,
-        normalize: true,
-        format: "mp3",
-        sample_rate: 44100,
-        mp3_bitrate: 128,
-        latency: "normal",
-        max_new_tokens: 1024,
-        repetition_penalty: 1.2,
-        min_chunk_length: 50,
-        condition_on_previous_chunks: true,
-        early_stop_threshold: 1,
-      }),
-    });
+    const audioData = await callFishAudioTts(ttsText, finalReferenceId);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Fish Audio TTS error:", response.status, errorText);
-      return NextResponse.json(
-        { error: `Fish Audio TTS failed: ${response.status}`, details: errorText },
-        { status: 502 }
-      );
-    }
-
-    // Read audio data
-    const audioBuffer = Buffer.from(await response.arrayBuffer());
-
-    // Ensure directory exists
     if (!existsSync(AUDIO_DIR)) {
       await mkdir(AUDIO_DIR, { recursive: true });
     }
 
-    // Save as mp3
     const filename = `${stopId}.mp3`;
     const filepath = join(AUDIO_DIR, filename);
-    await writeFile(filepath, audioBuffer);
+    await writeFile(filepath, Buffer.from(audioData));
 
-    // Update stop with audioUrl
     const audioUrlPath = `/api/audio/stops/${stopId}`;
     const updateResult = await Effect.runPromiseExit(
       Effect.gen(function* () {
@@ -139,11 +95,11 @@ export async function POST(
     }
 
     return NextResponse.json({ audioUrl: audioUrlPath, stop: updateResult.value });
-  } catch (err) {
-    console.error("Fish Audio TTS unexpected error:", err);
+  } catch (err: any) {
+    console.error("Fish Audio TTS error:", err.message);
     return NextResponse.json(
-      { error: "TTS generation failed" },
-      { status: 500 }
+      { error: "TTS generation failed", details: err.message },
+      { status: 502 }
     );
   }
 }
