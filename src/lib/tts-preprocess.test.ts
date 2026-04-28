@@ -235,8 +235,8 @@ describe("preprocessTtsText – złożone przypadki", () => {
     expect(result).toContain("między innymi");
   });
 
-  it("nie modyfikuje tekstu bez skrótów ani liczb rzymskich", () => {
-    const input = "Zamek stoi na wzgórzu. Widok jest piękny.";
+  it("nie modyfikuje tekstu bez skrótów ani liczb rzymskich (bez interpunkcji)", () => {
+    const input = "Zamek stoi na wzgórzu i widok jest piękny";
     expect(preprocessTtsText(input)).toBe(input);
   });
 });

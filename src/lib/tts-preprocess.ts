@@ -125,6 +125,35 @@ export const EMOTION_MAP: Record<string, string> = {
   default: "spokojnie, narracyjnie",
 };
 
+// ── Fish Audio S2 pause injection (Polish only) ──────────────────────
+
+const PAUSE_TAG_RE = /\(break\)|\(long-break\)/;
+
+/**
+ * Insert Fish Audio S2 pause tags into Polish narration.
+ *   - Sentence endings (., ?, !) → (long-break)   ~500-800 ms
+ *   - Phrase boundaries (, ;)  → (break)       ~200-300 ms
+ *
+ * Skips silently if tags are already present to avoid double-injection.
+ */
+export function insertPauses(text: string): string {
+  if (PAUSE_TAG_RE.test(text)) return text;
+
+  return (
+    text
+      // Sentence boundaries before upper-case word
+      .replace(
+        /([.!?])(\s+)(?=[A-ZĄĆĘŁŃÓŚŹŻ])/gu,
+        (_, punct, spaces) => `${punct}(long-break)${spaces}`
+      )
+      // Phrase boundaries before any word
+      .replace(
+        /([,;])(\s+)(?=[a-ząćęłńóśźżA-ZĄĆĘŁŃÓŚŹŻ])/g,
+        (_, punct, spaces) => `${punct}(break)${spaces}`
+      )
+  );
+}
+
 // ── Main preprocessor ────────────────────────────────────────────────
 
 export type Language = "pl" | "en" | string;
@@ -270,6 +299,9 @@ export function preprocessTtsText(text: string, _language?: Language): string {
 
   // 11. Usuń nadmiarowe spacje
   result = result.replace(/\s+/g, " ").trim();
+
+  // 12. Pauzy Fish Audio S2 — tylko dla polskiego
+  result = insertPauses(result);
 
   return result;
 }
