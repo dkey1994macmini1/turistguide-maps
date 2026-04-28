@@ -14,11 +14,11 @@ export function registerUpdateStop(server: McpServer): void {
     {
       title: "Update Stop",
       description:
-        "Update details of a single stop. Identify the stop by its position (1-based index) within the day's stop list. Only provided fields are updated.",
+        "Update details of a single stop by its ID (stable, does not shift like indices). Only provided fields are updated.",
       inputSchema: {
         planSlug: z.string().describe("The slug of the plan"),
         dayNumber: z.number().describe("Day number (1-based)"),
-        stopIndex: z.number().describe("Stop position within the day (1-based, e.g. 1 = first stop)"),
+        stopId: z.string().describe("The UUID of the stop to update"),
         title: z.string().optional().describe("New stop name"),
         summary: z
           .string()
@@ -73,7 +73,7 @@ export function registerUpdateStop(server: McpServer): void {
         audioUrl: z.string().nullable().optional().describe("Audio file URL. Preserve existing value unless intentionally changing audio. Pass null to clear."),
       },
     },
-    async ({ planSlug, dayNumber, stopIndex, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl }) => {
+    async ({ planSlug, dayNumber, stopId, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl }) => {
       const result = await runEffectSafe(
         Effect.gen(function* () {
           const rm = yield* ReadModelPort;
@@ -83,8 +83,8 @@ export function registerUpdateStop(server: McpServer): void {
           const day = plan.days.find((d: any) => d.dayNumber === dayNumber);
           if (!day) throw new Error(`Day ${dayNumber} not found in plan '${planSlug}'`);
 
-          const stop = day.stops[stopIndex - 1];
-          if (!stop) throw new Error(`Stop index ${stopIndex} not found in day ${dayNumber}`);
+          const stop = day.stops.find((s: any) => s.id === stopId);
+          if (!stop) throw new Error(`Stop id '${stopId}' not found in day ${dayNumber}`);
 
           const update: any = {};
           if (title !== undefined) update.title = title;

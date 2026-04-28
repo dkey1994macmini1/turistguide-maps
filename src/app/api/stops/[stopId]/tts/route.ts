@@ -6,7 +6,7 @@ import { Effect } from "effect";
 import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
 import { AppLayer } from "@/composition-root";
 import { AUDIO_DIR } from "../audio-constants";
-import { preprocessTtsText } from "@/lib/tts-preprocess";
+import { preprocessTtsText, addEmotionTag, EMOTION_MAP } from "@/lib/tts-preprocess";
 
 const FISH_AUDIO_API = "https://api.fish.audio/v1/tts";
 const REFERENCE_ID_PL = "2532d01f4c59446d9e2144803b73e9da"; // Polish voice ref
@@ -38,9 +38,11 @@ export async function POST(
     return NextResponse.json({ error: "Stop has no description to synthesize" }, { status: 400 });
   }
 
-  // Allow override: body can specify text and reference_id
+  // Allow override: body can specify text, reference_id, language, and emotion tag
   let bodyText: string | null = null;
   let bodyReferenceId: string | null = null;
+  let bodyLang: string = "pl"; // default Polish
+  let bodyEmotion: string | null = null;
   try {
     const body = await request.json();
     if (typeof body.text === "string" && body.text.trim().length > 0) {
@@ -49,12 +51,23 @@ export async function POST(
     if (typeof body.reference_id === "string") {
       bodyReferenceId = body.reference_id;
     }
+    if (typeof body.language === "string" && body.language) {
+      bodyLang = body.language;
+    }
+    if (typeof body.emotion === "string" && body.emotion) {
+      bodyEmotion = body.emotion;
+    }
   } catch {
     // No body or invalid JSON — use defaults
   }
 
-  const ttsText = preprocessTtsText(bodyText ?? text);
-  const referenceId = bodyReferenceId ?? REFERENCE_ID_PL;
+  const effectiveLang: "pl" | "en" = bodyLang === "en" ? "en" : "pl";
+  const rawDescription = bodyText ?? text;
+  // Normalize + emotion tag
+  const normalized = preprocessTtsText(rawDescription, effectiveLang);
+  const emotionTag = bodyEmotion ?? EMOTION_MAP.default;
+  const ttsText = addEmotionTag(normalized, effectiveLang === "pl" ? emotionTag : "");
+  const referenceId = bodyReferenceId ?? (effectiveLang === "pl" ? REFERENCE_ID_PL : REFERENCE_ID_EN);
 
   // Call Fish Audio API
   const apiKey = process.env.FISH_AUDIO_API_KEY;

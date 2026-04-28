@@ -13,14 +13,14 @@ export function registerRemoveStop(server: McpServer): void {
     {
       title: "Remove Stop",
       description:
-        "Remove a single stop from a day. Identify the stop by its position (1-based index) within the day's stop list.",
+        "Remove a single stop from a day by its ID (stable, does not shift like indices).",
       inputSchema: {
         planSlug: z.string().describe("The slug of the plan"),
         dayNumber: z.number().describe("Day number (1-based)"),
-        stopIndex: z.number().describe("Stop position within the day (1-based, e.g. 1 = first stop)"),
+        stopId: z.string().describe("The UUID of the stop to remove"),
       },
     },
-    async ({ planSlug, dayNumber, stopIndex }) => {
+    async ({ planSlug, dayNumber, stopId }) => {
       const result = await runEffectSafe(
         Effect.gen(function* () {
           const rm = yield* ReadModelPort;
@@ -30,11 +30,11 @@ export function registerRemoveStop(server: McpServer): void {
           const day = plan.days.find((d: any) => d.dayNumber === dayNumber);
           if (!day) throw new Error(`Day ${dayNumber} not found in plan '${planSlug}'`);
 
-          const stop = day.stops[stopIndex - 1];
-          if (!stop) throw new Error(`Stop index ${stopIndex} not found in day ${dayNumber} (has ${day.stops.length} stops)`);
+          const stop = day.stops.find((s: any) => s.id === stopId);
+          if (!stop) throw new Error(`Stop id '${stopId}' not found in day ${dayNumber}`);
 
           yield* stopRepo.deleteStop(stop.id);
-          return { removed: stop.title, dayNumber, stopIndex };
+          return { removed: stop.title, dayNumber, stopId };
         }),
       );
       if (!result.ok) return errResult((result as { ok: false; error: string }).error);

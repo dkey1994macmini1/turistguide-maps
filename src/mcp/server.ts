@@ -3,6 +3,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { registerGetStopAudio } from "./tools/get-stop-audio";
 import { registerListItineraries } from "./tools/list-itineraries";
 import { registerGetItinerary } from "./tools/get-itinerary";
 import { registerCreatePlan } from "./tools/create-plan";
@@ -21,6 +22,7 @@ const server = new McpServer({
 
 registerListItineraries(server);
 registerGetItinerary(server);
+registerGetStopAudio(server);
 registerCreatePlan(server);
 registerDeletePlan(server);
 registerAddDay(server);

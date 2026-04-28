@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import { z } from "zod";
 import { ReadModelPort } from "@/core/ports/read-model-port";
 import { runEffect, errResult, okResult } from "../helpers";
-import { serializePlan } from "../serialize";
+import { serializePlanLight } from "../serialize";
 
 export function registerGetItinerary(server: McpServer): void {
   server.registerTool(
@@ -26,7 +26,7 @@ export function registerGetItinerary(server: McpServer): void {
             return yield* rm.getPlanReadModelBySlug(planSlug);
           }),
         );
-        return okResult(serializePlan(plan));
+        return okResult(serializePlanLight(plan));
       } catch (e: any) {
         return errResult(`Plan not found — ${planSlug}`);
       }

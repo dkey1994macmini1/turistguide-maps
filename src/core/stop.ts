@@ -23,6 +23,7 @@ export type Stop = {
   readonly warnings: ReadonlyArray<string>;
   readonly alternative: string | null;
   readonly audioUrl: string | null;
+	
 };
 
 export type StopCreateInput = {
