@@ -16,10 +16,10 @@ interface TravelMapProps {
 }
 
 // Custom marker icon using our CSS class
-function createCustomIcon(label: string, isActive: boolean): L.DivIcon {
+function createCustomIcon(label: string, isActive: boolean, isVisited: boolean): L.DivIcon {
   return L.divIcon({
     className: "",
-    html: `<div class="custom-marker${isActive ? " active" : ""}">${label}</div>`,
+    html: `<div class="custom-marker${isActive ? " active" : ""}${isVisited ? " visited" : ""}">${label}</div>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
     popupAnchor: [0, -14],
@@ -90,7 +90,7 @@ function StopMarker({
     <Marker
       ref={markerRef}
       position={[stop.lat, stop.lng]}
-      icon={createCustomIcon(label, isSelected)}
+      icon={createCustomIcon(label, isSelected, stop.visited)}
       eventHandlers={{
         click: () => onMarkerClick(stop.id),
       }}

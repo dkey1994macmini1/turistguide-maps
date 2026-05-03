@@ -71,9 +71,10 @@ export function registerUpdateStop(server: McpServer): void {
           .optional()
           .describe("Alternative if this stop doesn't work out. Pass null to clear."),
         audioUrl: z.string().nullable().optional().describe("Audio file URL. Preserve existing value unless intentionally changing audio. Pass null to clear."),
+        visited: z.boolean().optional().describe("Whether the stop has been visited. Pass true/false to mark/unmark."),
       },
     },
-    async ({ planSlug, dayNumber, stopId, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl }) => {
+    async ({ planSlug, dayNumber, stopId, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl, visited }) => {
       const result = await runEffectSafe(
         Effect.gen(function* () {
           const rm = yield* ReadModelPort;
@@ -101,6 +102,7 @@ export function registerUpdateStop(server: McpServer): void {
           if (warnings !== undefined) update.warnings = warnings;
           if (alternative !== undefined) update.alternative = alternative;
           if (audioUrl !== undefined) update.audioUrl = audioUrl;
+          if (visited !== undefined) update.visited = visited;
 
           const updated = yield* stopRepo.updateStop(stop.id, update);
           return { ...updated, googleMapsUrl: googleMapsUrl(updated.lat, updated.lng) };

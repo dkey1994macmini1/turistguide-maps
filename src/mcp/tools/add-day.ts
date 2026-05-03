@@ -75,6 +75,7 @@ export function registerAddDay(server: McpServer): void {
                   warnings: s.warnings ?? [],
                   alternative: s.alternative ?? null,
                   audioUrl: s.audioUrl ?? undefined,
+                  visited: s.visited ?? undefined,
                 });
                 createdStops.push(updated);
               } else {

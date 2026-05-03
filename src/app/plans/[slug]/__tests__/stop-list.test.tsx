@@ -22,13 +22,15 @@ const makeStop = (overrides: Partial<StopItem> & { id: string; title: string }):
   bestTime: null,
   warnings: [],
   alternative: null,
+  audioUrl: null,
+  visited: false,
   ...overrides,
 });
 
 describe("StopList", () => {
   it("shows empty message when no stops", () => {
     render(<StopList stops={[]} selectedStopId={null} onSelectStop={() => {}} />);
-    expect(screen.getByText("No stops for this day.")).toBeInTheDocument();
+    expect(screen.getByText("Brak przystanków na ten dzień.")).toBeInTheDocument();
   });
 
   it("renders each stop with order number", () => {
@@ -93,5 +95,45 @@ describe("StopList", () => {
     fireEvent.click(screen.getByText("Diamond Head"));
     expect(selected).not.toBeNull();
     expect(selected!.id).toBe("s1");
+  });
+
+  it("shows unvisited toggle for non-visited stop", () => {
+    const stops = [makeStop({ id: "s1", title: "Diamond Head", visited: false })];
+    render(<StopList stops={stops} selectedStopId={null} onSelectStop={() => {}} />);
+    expect(screen.getByText("○")).toBeInTheDocument();
+  });
+
+  it("shows visited checkmark for visited stop", () => {
+    const stops = [makeStop({ id: "s1", title: "Diamond Head", visited: true })];
+    render(<StopList stops={stops} selectedStopId={null} onSelectStop={() => {}} />);
+    expect(screen.getByText("✓")).toBeInTheDocument();
+  });
+
+  it("calls onToggleVisited when toggle clicked", () => {
+    let toggledId: string | null = null;
+    let toggledValue: boolean | null = null;
+    const stops = [makeStop({ id: "s1", title: "Diamond Head", visited: false })];
+    render(
+      <StopList
+        stops={stops}
+        selectedStopId={null}
+        onSelectStop={() => {}}
+        onToggleVisited={(id, v) => { toggledId = id; toggledValue = v; }}
+      />
+    );
+
+    fireEvent.click(screen.getByText("○"));
+    expect(toggledId).toBe("s1");
+    expect(toggledValue).toBe(true);
+  });
+
+  it("applies visited class when stop is visited", () => {
+    const stops = [
+      makeStop({ id: "s1", title: "Diamond Head", visited: true }),
+    ];
+    render(<StopList stops={stops} selectedStopId={null} onSelectStop={() => {}} />);
+
+    const items = screen.getAllByRole("button");
+    expect(items[0].classList.contains("visited")).toBe(true);
   });
 });

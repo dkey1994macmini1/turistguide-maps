@@ -7,9 +7,10 @@ interface StopListProps {
   stops: StopItem[];
   selectedStopId: string | null;
   onSelectStop: (stop: StopItem) => void;
+  onToggleVisited?: (stopId: string, visited: boolean) => void;
 }
 
-export function StopList({ stops, selectedStopId, onSelectStop }: StopListProps) {
+export function StopList({ stops, selectedStopId, onSelectStop, onToggleVisited }: StopListProps) {
   const selectedRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export function StopList({ stops, selectedStopId, onSelectStop }: StopListProps)
   }, [selectedStopId]);
 
   if (stops.length === 0) {
-    return <div className="stop-list-empty">No stops for this day.</div>;
+    return <div className="stop-list-empty">Brak przystanków na ten dzień.</div>;
   }
 
   return (
@@ -30,7 +31,7 @@ export function StopList({ stops, selectedStopId, onSelectStop }: StopListProps)
           ref={stop.id === selectedStopId ? selectedRef : undefined}
         >
           <button
-            className={`stop-item ${stop.id === selectedStopId ? "selected" : ""}`}
+            className={`stop-item ${stop.id === selectedStopId ? "selected" : ""} ${stop.visited ? "visited" : ""}`}
             onClick={() => onSelectStop(stop)}
           >
             <span className="stop-order">{index + 1}</span>
@@ -40,6 +41,16 @@ export function StopList({ stops, selectedStopId, onSelectStop }: StopListProps)
                 <span className="stop-summary">{stop.summary}</span>
               )}
             </div>
+            <span
+              className={`stop-visited-toggle${stop.visited ? " visited" : ""}`}
+              title={stop.visited ? "Odznacz — nie odwiedzone" : "Zaznacz jako odwiedzone"}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleVisited?.(stop.id, !stop.visited);
+              }}
+            >
+              {stop.visited ? "✓" : "○"}
+            </span>
           </button>
         </li>
       ))}

@@ -94,6 +94,29 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
     setMapCenter([stop.lat, stop.lng]);
   }, []);
 
+  const handleToggleVisited = useCallback(async (stopId: string, visited: boolean) => {
+    try {
+      const res = await fetch(`/api/stops/${stopId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visited }),
+      });
+      if (res.ok && plan) {
+        setPlan({
+          ...plan,
+          days: plan.days.map((day) => ({
+            ...day,
+            stops: day.stops.map((s) =>
+              s.id === stopId ? { ...s, visited } : s
+            ),
+          })),
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }, [plan]);
+
   const handleMarkerClick = useCallback((stopId: string) => {
     setSelectedStopId(stopId);
   }, []);
@@ -207,6 +230,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
               stops={activeDay.stops}
               selectedStopId={selectedStopId}
               onSelectStop={handleStopSelect}
+              onToggleVisited={handleToggleVisited}
             />
           )}
 

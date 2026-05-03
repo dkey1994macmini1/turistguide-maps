@@ -27,6 +27,7 @@ export const toStop = (row: StopDAO): Stop => ({
   warnings: (row.warnings ?? []) as ReadonlyArray<string>,
   alternative: row.alternative ?? null,
   audioUrl: row.audioUrl ?? null,
+  visited: row.visited ?? false,
 });
 
 export const toDay = (row: DayDAO): Day => ({

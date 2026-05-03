@@ -34,6 +34,7 @@ const makePostgresStopRepository = (db: DbClient): StopRepository => ({
           warnings: input.warnings ?? [],
           alternative: input.alternative ?? null,
           audioUrl: input.audioUrl ?? null,
+          visited: input.visited ?? false,
         };
         const [row] = await db.insert(stops).values(insertData).returning();
         return toStop(row);
@@ -83,6 +84,7 @@ const makePostgresStopRepository = (db: DbClient): StopRepository => ({
           ...(input.warnings !== undefined && { warnings: [...(input.warnings ?? [])] }),
           ...(input.alternative !== undefined && { alternative: input.alternative as string | null }),
           ...(input.audioUrl !== undefined && { audioUrl: input.audioUrl as string | null }),
+          ...(input.visited !== undefined && { visited: input.visited }),
         };
         const [row] = await db.update(stops).set(updateData).where(eq(stops.id, id)).returning();
         if (!row) throw { _tag: "NotFoundError" as const, id };

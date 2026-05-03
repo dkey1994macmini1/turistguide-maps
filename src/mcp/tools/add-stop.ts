@@ -22,8 +22,9 @@ export function registerAddStop(server: McpServer): void {
         title: z.string().describe("Stop name"),
         summary: z
           .string()
+          .nullable()
           .optional()
-          .describe("Brief factual overview: 1-3 sentences, ~50-150 chars. Quick scan for UI cards. No markdown."),
+          .describe("Brief factual overview: 1-3 sentences, ~50-150 chars. Quick scan for UI cards. No markdown. Pass null to clear."),
         description: z
           .string()
           .describe(
@@ -50,9 +51,10 @@ export function registerAddStop(server: McpServer): void {
         warnings: z.array(z.string()).optional().default([]).describe("Warnings, e.g. ['Steep climb', 'No shade']"),
         alternative: z.string().optional().describe("Alternative if this stop doesn't work out"),
         audioUrl: z.string().nullable().optional().describe("Audio file URL (e.g. /api/audio/stops/stop-id). Preserve existing value unless intentionally changing audio. Pass null to clear."),
+        visited: z.boolean().optional().describe("Whether the stop has been visited."),
       },
     },
-    async ({ planSlug, dayNumber, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl }) => {
+    async ({ planSlug, dayNumber, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl, visited }) => {
       try {
         const stop = await runEffect(
           Effect.gen(function* () {
@@ -81,6 +83,7 @@ export function registerAddStop(server: McpServer): void {
               warnings: warnings ?? [],
               alternative: alternative ?? null,
               audioUrl: audioUrl ?? null,
+              visited: visited ?? false,
             });
             return { ...newStop, googleMapsUrl: googleMapsUrl(lat, lng) };
           }),

@@ -36,6 +36,7 @@ export type StopItem = {
   warnings: ReadonlyArray<string>;
   alternative: string | null;
   audioUrl: string | null;
+  visited: boolean;
 };
 
 export type DayWithStops = DayItem & {

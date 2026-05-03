@@ -40,6 +40,7 @@ export function serializeReadModel(plan: PlanReadModel) {
         warnings: stop.warnings ?? [],
         alternative: stop.alternative ?? null,
         audioUrl: stop.audioUrl ?? null,
+        visited: stop.visited ?? false,
       })),
     })),
   };

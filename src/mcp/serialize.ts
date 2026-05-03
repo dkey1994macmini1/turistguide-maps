@@ -17,8 +17,9 @@ function serializeStopLight(stop: any) {
     reservation: stop.reservation ?? null,
     bring: stop.bring ?? [],
     bestTime: stop.bestTime ?? null,
-    warnings: stop.warnings ?? [],
     alternative: stop.alternative ?? null,
+    audioUrl: stop.audioUrl ?? null,
+    visited: stop.visited ?? false,
   };
 }
 
@@ -41,6 +42,7 @@ function serializeStopFull(stop: any) {
     warnings: stop.warnings ?? [],
     alternative: stop.alternative ?? null,
     audioUrl: stop.audioUrl ?? null,
+    visited: stop.visited ?? false,
   };
 }
 

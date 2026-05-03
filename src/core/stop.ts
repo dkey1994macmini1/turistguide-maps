@@ -23,7 +23,8 @@ export type Stop = {
   readonly warnings: ReadonlyArray<string>;
   readonly alternative: string | null;
   readonly audioUrl: string | null;
-	
+  readonly visited: boolean;
+
 };
 
 export type StopCreateInput = {
@@ -43,6 +44,7 @@ export type StopCreateInput = {
   readonly warnings?: ReadonlyArray<string>;
   readonly alternative?: string | null;
   readonly audioUrl?: string | null;
+  readonly visited?: boolean;
 };
 
 export type StopUpdateInput = {
@@ -61,4 +63,5 @@ export type StopUpdateInput = {
   readonly warnings?: ReadonlyArray<string>;
   readonly alternative?: string | null;
   readonly audioUrl?: string | null;
+  readonly visited?: boolean;
 };

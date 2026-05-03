@@ -21,7 +21,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { title, description, summary, lat, lng, sortOrder, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl } = body as Record<string, unknown>;
+  const { title, description, summary, lat, lng, sortOrder, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl, visited } = body as Record<string, unknown>;
 
   if (typeof lat === "number" && typeof lng === "number") {
     const coordResult = Effect.runSyncExit(validateCoordinates(lat, lng));
@@ -60,6 +60,7 @@ export async function PATCH(
         ...(Array.isArray(warnings) && { warnings }),
         ...(alternative !== undefined && { alternative: typeof alternative === "string" ? alternative : null }),
         ...(audioUrl !== undefined && { audioUrl: typeof audioUrl === "string" ? audioUrl : null }),
+        ...(visited !== undefined && { visited: typeof visited === "boolean" ? visited : undefined }),
       });
     }).pipe(Effect.provide(AppLayer))
   );
