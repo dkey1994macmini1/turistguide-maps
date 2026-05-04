@@ -22,6 +22,7 @@ const makePostgresPlanRepository = (db: DbClient): PlanRepository => ({
           slug,
           title: input.title,
           description: input.description,
+          startDate: input.startDate ?? null,
           createdAt: now,
           updatedAt: now,
         };
@@ -75,6 +76,7 @@ const makePostgresPlanRepository = (db: DbClient): PlanRepository => ({
           ...(input.slug !== undefined && { slug: Slug(input.slug) }),
           ...(input.title !== undefined && { title: input.title }),
           ...(input.description !== undefined && { description: input.description }),
+          ...(input.startDate !== undefined && { startDate: input.startDate }),
           updatedAt: new Date(),
         };
         const [row] = await db.update(plans).set(updateData).where(eq(plans.id, id)).returning();

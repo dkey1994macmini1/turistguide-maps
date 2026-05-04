@@ -17,18 +17,24 @@ export function registerCreatePlan(server: McpServer): void {
         slug: z.string().describe("URL-safe slug for the plan, e.g. 'usa-southwest-15-day'"),
         title: z.string().describe("Human-readable title, e.g. 'USA Southwest 15 Days'"),
         description: z.string().optional().default("").describe("Optional description of the plan"),
+        startDate: z.string().optional().describe("Trip start date in YYYY-MM-DD format. Determines which days are past/future."),
       },
     },
-    async ({ slug, title, description }) => {
+    async ({ slug, title, description, startDate }) => {
       const result = await runEffectSafe(
         Effect.gen(function* () {
           const planRepo = yield* PlanRepositoryPort;
-          return yield* planRepo.createPlan({ slug, title, description: description ?? "" });
+          return yield* planRepo.createPlan({
+            slug,
+            title,
+            description: description ?? "",
+            startDate: startDate ? new Date(startDate) : null,
+          });
         }),
       );
       if (!result.ok) return errResult(`Failed to create plan — ${(result as { ok: false; error: string }).error}`);
       const plan = (result as { ok: true; value: any }).value;
-      return okResult({ id: plan.id, slug: plan.slug, title: plan.title, description: plan.description });
+      return okResult({ id: plan.id, slug: plan.slug, title: plan.title, description: plan.description, startDate: plan.startDate });
     },
   );
 }

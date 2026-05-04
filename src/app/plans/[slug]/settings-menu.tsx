@@ -8,6 +8,8 @@ interface SettingsMenuProps {
   onSaveOffline: () => void;
   hasOfflineSnapshot: boolean;
   slug: string;
+  startDate: string | null;
+  onStartDateChange: (date: string | null) => void;
 }
 
 export function SettingsMenu({
@@ -16,6 +18,8 @@ export function SettingsMenu({
   onSaveOffline,
   hasOfflineSnapshot,
   slug,
+  startDate,
+  onStartDateChange,
 }: SettingsMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -71,6 +75,17 @@ export function SettingsMenu({
           <button className="settings-menu-action" onClick={handleSharePdf}>
             📄 Udostępnij PDF
           </button>
+          <div className="settings-menu-option">
+            <span>Data wyjazdu</span>
+            <input
+              type="date"
+              value={startDate ?? ""}
+              onChange={(e) => {
+                onStartDateChange(e.target.value || null);
+              }}
+              className="settings-date-input"
+            />
+          </div>
         </div>
       )}
     </div>

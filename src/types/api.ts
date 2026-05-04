@@ -5,6 +5,7 @@ export type PlanListItem = {
   slug: string;
   title: string;
   description: string;
+  startDate: string | null;
   createdAt: string;
   updatedAt: string;
 };

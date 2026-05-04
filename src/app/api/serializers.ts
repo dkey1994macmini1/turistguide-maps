@@ -7,6 +7,7 @@ export function serializePlan(p: Plan) {
     slug: p.slug,
     title: p.title,
     description: p.description,
+    startDate: p.startDate ? p.startDate.toISOString() : null,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
   };

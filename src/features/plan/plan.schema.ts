@@ -7,4 +7,5 @@ export const plans = pgTable("plans", {
   description: text("description").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  startDate: timestamp("start_date", { withTimezone: true }),
 });

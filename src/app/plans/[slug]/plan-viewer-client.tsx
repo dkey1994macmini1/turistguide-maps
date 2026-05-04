@@ -46,6 +46,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
       })
       .then((data) => {
         setPlan(data);
+        setActiveDayIndex(computeDefaultDayIndex(data));
         setLoading(false);
       })
       .catch(() => {
@@ -152,6 +153,47 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
     };
   }, [activeDay]);
 
+  // Compute default active day — first day that hasn't passed
+  function computeDefaultDayIndex(data: PlanReadModel): number {
+    if (!data.startDate) return 0;
+    const start = new Date(data.startDate);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const idx = data.days.findIndex((d) => {
+      const dayStart = new Date(start);
+      dayStart.setDate(dayStart.getDate() + (d.dayNumber - 1));
+      return dayStart >= now;
+    });
+    return idx >= 0 ? idx : Math.max(0, data.days.length - 1);
+  }
+
+  function computeIsPastDay(dayNumber: number, startDateStr: string | null): boolean {
+    if (!startDateStr) return false;
+    const start = new Date(startDateStr);
+    const dayStart = new Date(start);
+    dayStart.setDate(dayStart.getDate() + (dayNumber - 1));
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return dayStart < now;
+  }
+
+  async function handleStartDateChange(date: string | null) {
+    try {
+      const res = await fetch(`/api/plans/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ startDate: date }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPlan(data);
+        setActiveDayIndex(computeDefaultDayIndex(data));
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   if (loading) {
     return (
       <div className="plan-viewer">
@@ -192,6 +234,8 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
               onSaveOffline={handleOpenOfflineDialog}
               hasOfflineSnapshot={hasOfflineSnapshot}
               slug={slug}
+              startDate={plan.startDate}
+              onStartDateChange={handleStartDateChange}
             />
           </div>
         </div>
@@ -223,6 +267,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
             days={days}
             activeIndex={activeDayIndex}
             onDayChange={handleDayChange}
+            startDate={plan.startDate}
           />
 
           {activeDay && (

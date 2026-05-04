@@ -13,7 +13,7 @@ const makeFakePlanRepository = (): PlanRepository => {
         const id = PlanId(`plan-${crypto.randomUUID()}`);
         const slug = Slug(input.slug);
         const now = new Date();
-        const plan: Plan = { id, slug, title: input.title, description: input.description, createdAt: now, updatedAt: now };
+        const plan: Plan = { id, slug, title: input.title, description: input.description, startDate: input.startDate ?? null, createdAt: now, updatedAt: now };
         store.set(plan.id, plan);
         return plan;
       }) as Effect.Effect<Plan, RepositoryError>,
@@ -46,6 +46,7 @@ const makeFakePlanRepository = (): PlanRepository => {
           ...(input.slug !== undefined && { slug: Slug(input.slug) }),
           ...(input.title !== undefined && { title: input.title }),
           ...(input.description !== undefined && { description: input.description }),
+          ...(input.startDate !== undefined && { startDate: input.startDate }),
           updatedAt: new Date(),
         };
         store.set(id, updated);

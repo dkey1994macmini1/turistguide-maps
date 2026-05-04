@@ -43,6 +43,7 @@ export const toPlan = (row: PlanDAO): Plan => ({
   slug: Slug(row.slug),
   title: row.title,
   description: row.description,
+  startDate: row.startDate ?? null,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });

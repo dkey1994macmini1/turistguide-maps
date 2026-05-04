@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { slug, title, description } = body as Record<string, unknown>;
+  const { slug, title, description, startDate } = body as Record<string, unknown>;
 
   if (typeof slug !== "string" || typeof title !== "string") {
     return NextResponse.json({ error: "slug and title are required" }, { status: 400 });
@@ -41,6 +41,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid slug format" }, { status: 400 });
   }
 
+  const parsedStartDate = startDate !== undefined
+    ? (typeof startDate === "string" ? new Date(startDate) : null)
+    : null;
+  if (parsedStartDate !== null && isNaN(parsedStartDate.getTime())) {
+    return NextResponse.json({ error: "Invalid startDate format" }, { status: 400 });
+  }
+
   const result = await Effect.runPromiseExit(
     Effect.gen(function* () {
       const repo = yield* PlanRepositoryPort;
@@ -48,6 +55,7 @@ export async function POST(request: Request) {
         slug,
         title,
         description: typeof description === "string" ? description : "",
+        startDate: parsedStartDate,
       });
     }).pipe(Effect.provide(AppLayer))
   );
