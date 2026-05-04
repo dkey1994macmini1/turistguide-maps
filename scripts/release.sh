@@ -77,6 +77,7 @@ fi
 
 # ── 5. Start new server ────────────────────────────────────
 log "Starting production server..."
+set -a; source .env; set +a
 nohup npm run start > /tmp/turistguide-prod.log 2>&1 &
 SERVER_PID=$!
 
