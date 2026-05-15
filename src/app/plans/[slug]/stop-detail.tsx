@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import type { StopItem } from "@/types/api";
+import { fetchAudioBlob, triggerFileDownload, shareAudioFile } from "@/lib/audio-download";
 
 interface StopDetailProps {
   stop: StopItem;
   onClose: () => void;
   audioManagement?: boolean;
+  slug: string;
 }
 
 function hasStructuredData(stop: StopItem): boolean {
@@ -21,7 +23,7 @@ function hasStructuredData(stop: StopItem): boolean {
   );
 }
 
-export function StopDetail({ stop, onClose, audioManagement = true }: StopDetailProps) {
+export function StopDetail({ stop, onClose, audioManagement = true, slug }: StopDetailProps) {
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [audioUrl, setAudioUrl] = useState(stop.audioUrl);
@@ -30,6 +32,8 @@ export function StopDetail({ stop, onClose, audioManagement = true }: StopDetail
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [ttsError, setTtsError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -88,6 +92,27 @@ export function StopDetail({ stop, onClose, audioManagement = true }: StopDetail
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // fallback — unlikely on mobile, just ignore
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!audioUrl) return;
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      const result = await fetchAudioBlob(slug, stop.id, audioUrl);
+      if (!result.ok || !result.blob) {
+        setDownloadError(result.error ?? "Błąd pobierania");
+        return;
+      }
+      const shared = await shareAudioFile(result.blob, result.filename!, stop.title);
+      if (!shared) {
+        triggerFileDownload(result.blob, result.filename!);
+      }
+    } catch {
+      setDownloadError("Błąd podczas pobierania pliku");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -161,17 +186,26 @@ export function StopDetail({ stop, onClose, audioManagement = true }: StopDetail
         </div>
       )}
 
-      {/* Audio player + generate + upload */}
+      {/* Audio player + generate + upload + download */}
       <div className="stop-detail-audio">
         {audioUrl ? (
           <div className="stop-audio-player">
             <audio controls src={audioUrl} className="stop-audio-element" />
+            {/* Download — always available when audio exists */}
+            <button
+              className="stop-audio-download"
+              onClick={handleDownload}
+              disabled={downloading}
+              title="Pobierz audio"
+            >
+              {downloading ? "⏳" : "📥"}
+            </button>
             {audioManagement && (
               <>
                 <button
                   className="stop-audio-delete"
                   onClick={() => setShowDeleteConfirm(true)}
-                  disabled={uploading || generating}
+                  disabled={uploading || generating || downloading}
                   title="Usuń audio"
                 >
                   🗑
@@ -179,7 +213,7 @@ export function StopDetail({ stop, onClose, audioManagement = true }: StopDetail
                 <button
                   className="stop-audio-regenerate"
                   onClick={() => { setTtsError(null); setShowTtsConfirm(true); }}
-                  disabled={uploading || generating}
+                  disabled={uploading || generating || downloading}
                   title="Regeneruj audio (TTS)"
                 >
                   🔊
@@ -190,7 +224,7 @@ export function StopDetail({ stop, onClose, audioManagement = true }: StopDetail
                     type="file"
                     accept="audio/*"
                     onChange={handleUpload}
-                    disabled={uploading || generating}
+                    disabled={uploading || generating || downloading}
                     style={{ display: "none" }}
                   />
                 </label>
@@ -261,6 +295,8 @@ export function StopDetail({ stop, onClose, audioManagement = true }: StopDetail
 
         {generating && <span className="stop-audio-status">🔊 Generowanie audio…</span>}
         {uploading && <span className="stop-audio-status">Przesyłanie…</span>}
+        {downloading && <span className="stop-audio-status">⬇️ Pobieranie…</span>}
+        {downloadError && <span className="stop-audio-error">{downloadError}</span>}
         {ttsError && <span className="stop-audio-error">{ttsError}</span>}
       </div>
 

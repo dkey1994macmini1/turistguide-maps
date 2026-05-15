@@ -280,7 +280,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
           )}
 
           {selectedStop && (
-            <StopDetail stop={selectedStop} onClose={handleCloseDetail} audioManagement={audioManagement} />
+            <StopDetail stop={selectedStop} onClose={handleCloseDetail} audioManagement={audioManagement} slug={slug} />
           )}
         </div>
       </div>
