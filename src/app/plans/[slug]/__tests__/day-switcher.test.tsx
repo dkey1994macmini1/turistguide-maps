@@ -97,4 +97,40 @@ describe("DaySwitcher", () => {
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
   });
+
+  it("scrolls active tab into view when activeIndex changes", () => {
+    const scrollIntoViewMock = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      value: scrollIntoViewMock,
+      writable: true,
+      configurable: true,
+    });
+
+    const days = Array.from({ length: 5 }, (_, i) => makeDay({ dayNumber: i + 1 }));
+    const { rerender } = render(
+      <DaySwitcher days={days} activeIndex={0} onDayChange={() => {}} startDate={null} />
+    );
+
+    // Clear any calls from initial mount
+    scrollIntoViewMock.mockClear();
+
+    // Change to day 4 — should scroll active tab into view
+    rerender(
+      <DaySwitcher days={days} activeIndex={3} onDayChange={() => {}} startDate={null} />
+    );
+
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+    expect(scrollIntoViewMock.mock.calls[0][0]).toMatchObject({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
+
+    // Restore
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
+  });
 });
