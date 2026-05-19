@@ -59,11 +59,11 @@ describe("StopList", () => {
     const stops = [
       makeStop({ id: "s1", title: "Diamond Head", summary: null }),
     ];
-    render(<StopList stops={stops} selectedStopId={null} onSelectStop={() => {}} />);
+    const { container } = render(<StopList stops={stops} selectedStopId={null} onSelectStop={() => {}} />);
 
-    // Only title should be in the card, no summary span
-    const button = screen.getByRole("button");
-    const summaryElements = button.querySelectorAll(".stop-summary");
+    const items = container.querySelectorAll(".stop-item");
+    expect(items).toHaveLength(1);
+    const summaryElements = items[0].querySelectorAll(".stop-summary");
     expect(summaryElements).toHaveLength(0);
   });
 
@@ -72,9 +72,10 @@ describe("StopList", () => {
       makeStop({ id: "s1", title: "Diamond Head" }),
       makeStop({ id: "s2", title: "Hanauma Bay" }),
     ];
-    render(<StopList stops={stops} selectedStopId="s2" onSelectStop={() => {}} />);
+    const { container } = render(<StopList stops={stops} selectedStopId="s2" onSelectStop={() => {}} />);
 
-    const items = screen.getAllByRole("button");
+    const items = container.querySelectorAll(".stop-item");
+    expect(items).toHaveLength(2);
     expect(items[0].classList.contains("selected")).toBe(false);
     expect(items[1].classList.contains("selected")).toBe(true);
   });
@@ -131,9 +132,10 @@ describe("StopList", () => {
     const stops = [
       makeStop({ id: "s1", title: "Diamond Head", visited: true }),
     ];
-    render(<StopList stops={stops} selectedStopId={null} onSelectStop={() => {}} />);
+    const { container } = render(<StopList stops={stops} selectedStopId={null} onSelectStop={() => {}} />);
 
-    const items = screen.getAllByRole("button");
+    const items = container.querySelectorAll(".stop-item");
+    expect(items).toHaveLength(1);
     expect(items[0].classList.contains("visited")).toBe(true);
   });
 });

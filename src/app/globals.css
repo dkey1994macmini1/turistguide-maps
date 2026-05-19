@@ -1003,3 +1003,39 @@ button {
 .stop-item.visited .stop-order {
   background: var(--color-primary-light);
 }
+/* ═══════════════════════ Drag & Drop Stop List ═══════════════════════ */
+
+.stop-list-item {
+  list-style: none;
+}
+
+.stop-list-item.dragging {
+  opacity: 0.95;
+}
+
+.stop-list-item.dragging .stop-item {
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-primary-light);
+}
+
+.stop-list-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  cursor: grab;
+  border-radius: 4px;
+  transition: color 0.1s ease, background 0.1s ease;
+}
+
+.stop-list-drag-handle:active {
+  cursor: grabbing;
+}
+
+.stop-list-drag-handle:hover {
+  color: var(--color-primary);
+  background: rgba(45, 106, 79, 0.08);
+}

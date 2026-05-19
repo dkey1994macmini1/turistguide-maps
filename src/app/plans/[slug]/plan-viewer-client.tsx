@@ -95,6 +95,36 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
     setMapCenter([stop.lat, stop.lng]);
   }, []);
 
+  const handleReorderStops = useCallback(
+    async (items: Array<{ id: string; sortOrder: number }>) => {
+      if (!plan || !activeDay) return;
+      try {
+        const res = await fetch("/api/stops/reorder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items }),
+        });
+        if (res.ok) {
+          const newStops = [...activeDay.stops];
+          for (const item of items) {
+            const s = newStops.find((x) => x.id === item.id);
+            if (s) (s as { sortOrder: number }).sortOrder = item.sortOrder;
+          }
+          newStops.sort((a, b) => a.sortOrder - b.sortOrder);
+          setPlan({
+            ...plan,
+            days: plan.days.map((day) =>
+              day.id === activeDay.id ? { ...day, stops: newStops } : day
+            ),
+          });
+        }
+      } catch {
+        // ignore
+      }
+    },
+    [plan, activeDay]
+  );
+
   const handleToggleVisited = useCallback(async (stopId: string, visited: boolean) => {
     try {
       const res = await fetch(`/api/stops/${stopId}`, {
@@ -276,6 +306,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
               selectedStopId={selectedStopId}
               onSelectStop={handleStopSelect}
               onToggleVisited={handleToggleVisited}
+              onReorder={handleReorderStops}
             />
           )}
 
