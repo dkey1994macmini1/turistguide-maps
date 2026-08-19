@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Turistguide — v3 (Hybrid)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --olive: #293b2e; --olive-light: #3d5a45; --olive-bg: #f4f6f4;
+  --cream: #faf9f7; --white: #ffffff;
+  --gold: #c9a96e; --gold-light: #f5ecd8;
+  --text: #1a1a1a; --text-2: #5a5a5a; --text-3: #9a9a9a;
+  --border: #e8e6e1; --border-light: #f0ede8;
+  --done: #52b788; --warn: #d4a373;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.12);
+  --radius: 10px; --radius-lg: 16px; --radius-xl: 24px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: 'Outfit', sans-serif; color: var(--text); background: var(--cream); -webkit-font-smoothing: antialiased; }
+body { min-height: 100dvh; }
+
+/* Header */
+.app-header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--white); border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+}
+.header-top { display: flex; align-items: center; justify-content: space-between; }
+.back-btn { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; font-weight: 500; color: var(--text-2); text-decoration: none; }
+.header-actions { display: flex; gap: 6px; }
+.icon-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--cream); border: 1px solid var(--border); color: var(--text-2); display: grid; place-items: center; cursor: pointer; transition: all 0.15s; }
+.icon-btn:hover { background: var(--olive); color: var(--white); border-color: var(--olive); }
+.icon-btn svg { width: 16px; height: 16px; }
+.plan-title { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 600; color: var(--olive); margin-top: 6px; line-height: 1.2; }
+.plan-sub { font-size: 0.78rem; color: var(--text-3); margin-top: 3px; display: flex; align-items: center; gap: 8px; }
+.plan-sub .sep { width: 3px; height: 3px; border-radius: 50%; background: var(--text-3); }
+
+/* Progress */
+.trip-progress { padding: 10px 16px; background: var(--olive-bg); border-bottom: 1px solid var(--border-light); }
+.progress-label { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; font-weight: 600; color: var(--olive); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.progress-track { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--olive), var(--done)); width: 39%; transition: width 0.6s ease; }
+
+/* Day tabs */
+.day-tabs-wrap { position: sticky; top: calc(env(safe-area-inset-top,0) + 1px); z-index: 90; background: var(--cream); border-bottom: 1px solid var(--border-light); overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.day-tabs-wrap::-webkit-scrollbar { display: none; }
+.day-tabs { display: flex; gap: 6px; padding: 10px 16px; min-width: min-content; }
+.day-tab { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; border-radius: var(--radius); background: var(--white); border: 1.5px solid var(--border); font-size: 0.75rem; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all 0.15s; white-space: nowrap; min-width: 64px; }
+.day-tab .d-num { font-size: 0.9rem; font-weight: 700; color: var(--olive); }
+.day-tab .d-meta { font-size: 0.68rem; color: var(--text-3); }
+.day-tab:hover { border-color: var(--olive); }
+.day-tab.active { background: var(--olive); color: var(--white); border-color: var(--olive); box-shadow: var(--shadow-sm); }
+.day-tab.active .d-num, .day-tab.active .d-meta { color: rgba(255,255,255,0.85); }
+.day-tab.past { opacity: 0.45; }
+
+/* Next stop hero */
+.next-stop { margin: 16px; background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden; }
+.next-stop-photo { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--olive-bg); }
+.next-stop-photo img { width: 100%; height: 100%; object-fit: cover; }
+.next-stop-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(41,59,46,0.55), transparent 60%); }
+.next-stop-badge { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 20px; background: var(--gold); color: var(--text); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em; z-index: 2; }
+.next-stop-text { position: absolute; bottom: 14px; left: 14px; right: 14px; z-index: 2; color: var(--white); }
+.next-stop-text h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 600; line-height: 1.2; }
+.next-stop-text p { font-size: 0.8rem; opacity: 0.9; margin-top: 3px; line-height: 1.35; }
+.next-stop-actions { display: flex; gap: 8px; padding: 12px 14px; }
+.qa-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: var(--radius); font-size: 0.78rem; font-weight: 600; border: 1.5px solid var(--border); background: var(--white); color: var(--text-2); cursor: pointer; transition: all 0.15s; }
+.qa-btn svg { width: 16px; height: 16px; }
+.qa-btn:hover { background: var(--olive-bg); border-color: var(--olive); color: var(--olive); }
+.qa-btn.primary { background: var(--olive); color: var(--white); border-color: var(--olive); }
+.qa-btn.primary:hover { background: var(--olive-light); }
+
+/* Stop list */
+.section-label { display: flex; align-items: center; gap: 8px; padding: 0 16px; margin: 20px 0 10px; font-size: 0.7rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
+.section-label::before, .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.stop-list { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.stop-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.15s; }
+.stop-item:hover { box-shadow: var(--shadow-md); border-color: var(--olive-light); }
+.stop-item:active { transform: scale(0.995); }
+.stop-item.done { opacity: 0.5; }
+.stop-item.done .stop-title { text-decoration: line-through; color: var(--text-3); }
+.stop-thumb { width: 56px; height: 56px; border-radius: var(--radius); flex-shrink: 0; overflow: hidden; background: var(--olive-bg); }
+.stop-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.stop-main { flex: 1; min-width: 0; }
+.stop-title { font-size: 0.88rem; font-weight: 600; color: var(--text); line-height: 1.25; }
+.stop-meta-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.stop-meta-chip { display: flex; align-items: center; gap: 3px; font-size: 0.7rem; color: var(--text-3); }
+.stop-meta-chip svg { width: 12px; height: 12px; }
+.stop-meta-chip.warn { color: var(--warn); }
+.stop-check { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border); background: var(--white); display: grid; place-items: center; flex-shrink: 0; cursor: pointer; transition: all 0.15s; margin-top: 2px; }
+.stop-check:hover { border-color: var(--done); }
+.stop-check.checked { background: var(--done); border-color: var(--done); color: var(--white); }
+.stop-check svg { width: 14px; height: 14px; }
+
+/* ═══ Bottom Sheet (v1 style) ═══ */
+.sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.sheet-overlay.open { opacity: 1; pointer-events: auto; }
+.sheet { position: fixed; bottom: 0; left: 0; right: 0; z-index: 210; background: var(--white); border-radius: var(--radius-xl) var(--radius-xl) 0 0; max-height: 88dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.16,1,0.3,1); padding-bottom: env(safe-area-inset-bottom,0px); }
+.sheet.open { transform: translateY(0); }
+.sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--border); margin: 12px auto; flex-shrink: 0; }
+.sheet-close { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); color: var(--white); border: none; display: grid; place-items: center; cursor: pointer; z-index: 5; }
+.sheet-close svg { width: 18px; height: 18px; }
+.sheet-hero { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; }
+.sheet-hero img { width: 100%; height: 100%; object-fit: cover; }
+.sheet-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(41,59,46,0.6), transparent 50%); }
+.sheet-hero-text { position: absolute; bottom: 16px; left: 16px; right: 60px; z-index: 2; color: var(--white); }
+.sheet-hero-text h2 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 600; line-height: 1.2; }
+.sheet-hero-text p { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; line-height: 1.35; }
+.sheet-body { padding: 20px 16px; }
+
+/* Metadata grid */
+.metadata-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+.meta-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--cream); border-radius: var(--radius); font-size: 0.78rem; border: 1px solid var(--border-light); }
+.meta-item svg { width: 16px; height: 16px; color: var(--olive); flex-shrink: 0; }
+.meta-item .meta-label { display: block; font-size: 0.68rem; color: var(--text-3); margin-bottom: 1px; }
+.meta-item .meta-value { color: var(--text); font-weight: 500; }
+
+/* Description + copy */
+.sheet-desc { font-size: 0.9rem; line-height: 1.7; color: var(--text); }
+.sheet-desc.collapsed { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.desc-actions { display: flex; gap: 8px; margin-top: 8px; }
+.copy-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 600; color: var(--olive); background: var(--cream); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; cursor: pointer; transition: all 0.15s; }
+.copy-btn:hover { background: var(--olive-bg); border-color: var(--olive); }
+.copy-btn svg { width: 12px; height: 12px; }
+.copy-btn.copied { color: var(--done); border-color: var(--done); }
+.read-more { font-size: 0.8rem; font-weight: 600; color: var(--olive); background: none; border: none; padding: 0; cursor: pointer; margin-top: 6px; }
+.read-more:hover { text-decoration: underline; }
+
+/* Audio section (secondary) */
+.audio-section { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 12px 14px; background: var(--gold-light); border-radius: var(--radius); border: 1px solid var(--gold-light); }
+.audio-play-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--olive); color: var(--white); border: none; display: grid; place-items: center; cursor: pointer; transition: transform 0.15s; flex-shrink: 0; }
+.audio-play-btn:active { transform: scale(0.92); }
+.audio-play-btn svg { width: 16px; height: 16px; }
+.audio-waveform { flex: 1; height: 32px; display: flex; align-items: center; gap: 3px; }
+.wave-bar { flex: 1; background: var(--border); border-radius: 2px; }
+.wave-bar:nth-child(3n) { height: 60%; }
+.wave-bar:nth-child(3n+1) { height: 40%; }
+.wave-bar:nth-child(3n+2) { height: 80%; }
+.audio-section:hover .wave-bar { background: var(--gold); }
+.audio-time { font-size: 0.7rem; color: var(--text-3); flex-shrink: 0; }
+.audio-generate { margin-left: auto; font-size: 0.72rem; font-weight: 600; color: var(--olive); background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+.audio-generate:hover { background: var(--cream); }
+
+/* Sheet links */
+.sheet-links { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.sheet-links a { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-radius: var(--radius); background: var(--cream); color: var(--olive); font-size: 0.85rem; font-weight: 500; text-decoration: none; border: 1px solid var(--border); transition: background 0.15s; }
+.sheet-links a:hover { background: var(--border-light); }
+.sheet-links a svg { width: 16px; height: 16px; }
+
+/* FAB */
+.fab { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom,0)); right: 16px; z-index: 150; width: 52px; height: 52px; border-radius: 50%; background: var(--olive); color: var(--white); border: none; display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow-md); transition: transform 0.15s; }
+.fab:hover { transform: scale(1.05); }
+.fab:active { transform: scale(0.95); }
+.fab svg { width: 20px; height: 20px; }
+
+/* Desktop */
+@media (min-width: 768px) {
+  .stop-list { max-width: 640px; margin: 0 auto; padding: 0 24px; }
+  .next-stop { max-width: 640px; margin: 20px auto; }
+  .trip-progress, .day-tabs-wrap { max-width: 640px; margin: 0 auto; }
+  .sheet { max-width: 480px; left: 50%; right: auto; transform: translate(-50%, 100%); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+  .sheet.open { transform: translate(-50%, 0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stop-item, .next-stop { animation: fadeUp 0.3s ease forwards; }
+.stop-item:nth-child(1) { animation-delay: 0.03s; }
+.stop-item:nth-child(2) { animation-delay: 0.06s; }
+.stop-item:nth-child(3) { animation-delay: 0.09s; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="app-header">
+  <div class="header-top">
+    <a href="#" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Plany</a>
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></button>
+      <button class="icon-btn" aria-label="Ustawienia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+    </div>
+  </div>
+  <h1 class="plan-title">Toskania — Sierpien 2026</h1>
+  <div class="plan-sub"><span>22-26.08</span><span class="sep"></span><span>5 dni</span><span class="sep"></span><span>5 osob</span><span class="sep"></span><a href="#" style="color:var(--olive);font-weight:600;">Foto-przewodnik →</a></div>
+</header>
+
+<!-- Progress -->
+<div class="trip-progress">
+  <div class="progress-label"><span>Postep wycieczki</span><span>7 / 18 przystankow</span></div>
+  <div class="progress-track"><div class="progress-fill"></div></div>
+</div>
+
+<!-- Day Tabs -->
+<div class="day-tabs-wrap">
+  <div class="day-tabs">
+    <button class="day-tab past"><span class="d-num">D1</span><span>Bolonia</span><span class="d-meta">5/5 zrob.</span></button>
+    <button class="day-tab active"><span class="d-num">D2</span><span>Greve</span><span class="d-meta">2/4 zrob.</span></button>
+    <button class="day-tab"><span class="d-num">D3</span><span>Siena</span><span class="d-meta">0/3 zrob.</span></button>
+    <button class="day-tab"><span class="d-num">D4</span><span>Val d'Orcia</span><span class="d-meta">0/4 zrob.</span></button>
+    <button class="day-tab"><span class="d-num">D5</span><span>Powrot</span><span class="d-meta">0/2 zrob.</span></button>
+  </div>
+</div>
+
+<!-- Next Stop -->
+<div class="next-stop">
+  <div class="next-stop-photo">
+    <img src="https://picsum.photos/seed/nextstop-greve/640/360" alt="">
+    <span class="next-stop-badge">NASTEPNY</span>
+    <div class="next-stop-text">
+      <h2>Fattoria Poggerino</h2>
+      <p>Check-in od 15:00, basen z widokiem na winnice</p>
+    </div>
+  </div>
+  <div class="next-stop-actions">
+    <button class="qa-btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>Odtworz audio</button>
+    <button class="qa-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Mapa</button>
+    <button class="qa-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Zrobione</button>
+  </div>
+</div>
+
+<!-- Stop List -->
+<div class="section-label">Pozostale przystanki (D2)</div>
+<div class="stop-list" id="stopList"></div>
+
+<!-- FAB -->
+<button class="fab" aria-label="Mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></button>
+
+<!-- Bottom Sheet -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="detailSheet">
+  <button class="sheet-close" onclick="closeSheet()" aria-label="Zamknij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  <div id="sheetContent"></div>
+</div>
+
+<script>
+const stops = [
+  { id:'s1', order:1, title:'Bolonia Airport', summary:'Odbior auta, parking P2 (1h free).', photo:'https://picsum.photos/seed/stop-bol/100/100', duration:'60-90 min', cost:'0 EUR', warning:null, reservation:null, bring:[], links:[{l:'Mapa',u:'#'}], done:true,
+    desc:'Lotnisko Guglielmo Marconi — 6 km od centrum. Odbior bagazu i auta zajmuje 15-20 min. Parking P2 oferuje pierwsza godzine bezplatnie.' },
+  { id:'s2', order:2, title:'InPost Locker', summary:'Szybki odbior przed Chianti.', photo:'https://picsum.photos/seed/stop-inpost/100/100', duration:'5-10 min', cost:null, warning:null, reservation:null, bring:['Kod odbioru'], links:[{l:'Mapa',u:'#'}], done:true,
+    desc:'Paczkomat przy SR 222, otoczony cyprysami. Zatrzymaj sie na poboczu.' },
+  { id:'s3', order:3, title:'Bottega a CAMPANA', summary:'Ragu + Chianti w Panzano.', photo:'https://picsum.photos/seed/stop-lunch/100/100', duration:'60-90 min', cost:'35-50 EUR/os', warning:'Ograniczone miejsca', reservation:'Rekomendowana rezerwacja na weekendy', bring:[], links:[{l:'Mapa',u:'#'},{l:'Rezerwacja',u:'#'}], done:false,
+    desc:'Panzano to mala winiarska wioska w sercu Chianti, znana przede wszystkim z Dario Cecchiniego, legendarnego rzeznika i restauratora. Bottega a CAMPANA to bardziej kameralna alternatywa wobec jego glownej restauracji. Menu opiera sie na sezonowych, lokalnych produktach: domowy makaron al ragu, grillowane warzywa, i oczywiscie lokalne Chianti Classico. Atmosfera jest niespieszna i rodzinna.',
+    audio:true },
+  { id:'s4', order:4, title:'Fattoria Poggerino', summary:'Apartament, basen, winnice.', photo:'https://picsum.photos/seed/stop-farm/100/100', duration:'—', cost:'180 EUR/noc', warning:null, reservation:'Zarezerwowane: 22-24.08', bring:['Stroj kapielowy','Klapki'], links:[{l:'Mapa',u:'#'}], done:false,
+    desc:'Rodzinna agroturystyka prowadzona przez rodzine Pieraccini od pokolen. Zlokalizowana miedzy Radda in Chianti a Gaiole, oferuje przepiekne widoki na winnice i oliwki.' },
+  { id:'s5', order:5, title:'Pizza Hot', summary:'Piec opalany drewnem.', photo:'https://picsum.photos/seed/stop-pizza/100/100', duration:'45-60 min', cost:'15-25 EUR/os', warning:'Kolejki w weekendy', reservation:null, bring:[], links:[{l:'Mapa',u:'#'}], done:false,
+    desc:'Rodzinna pizzeria w Radda. Margherita i Chianti Classico w karafce za 12 EUR.' },
+];
+
+function render() {
+  document.getElementById('stopList').innerHTML = stops.map(s => `
+    <div class="stop-item ${s.done?'done':''}" data-id="${s.id}">
+      <div class="stop-thumb"><img src="${s.photo}" alt="" loading="lazy"></div>
+      <div class="stop-main" onclick="openSheet('${s.id}')">
+        <div class="stop-title">${s.order}. ${s.title}</div>
+        <div class="stop-meta-row">
+          ${s.duration ? `<span class="stop-meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${s.duration}</span>` : ''}
+          ${s.cost ? `<span class="stop-meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> ${s.cost}</span>` : ''}
+          ${s.warning ? `<span class="stop-meta-chip warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${s.warning}</span>` : ''}
+        </div>
+      </div>
+      <div class="stop-check ${s.done?'checked':''}" onclick="toggleDone('${s.id}',event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleDone(id,e){
+  e.stopPropagation();
+  const s=stops.find(x=>x.id===id);
+  if(s){s.done=!s.done;render();}
+}
+
+// ═══ Sheet ═══
+const sheetOverlay = document.getElementById('sheetOverlay');
+const detailSheet = document.getElementById('detailSheet');
+const sheetContent = document.getElementById('sheetContent');
+
+function openSheet(id) {
+  const s = stops.find(x=>x.id===id);
+  if(!s) return;
+
+  const meta = [];
+  if(s.duration && s.duration!=='—') meta.push({
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    label:'Czas', val:s.duration });
+  if(s.cost) meta.push({
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+    label:'Koszt', val:s.cost });
+  if(s.reservation) meta.push({
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    label:'Rezerwacja', val:s.reservation });
+  if(s.bring.length) meta.push({
+    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>',
+    label:'Zabierz', val:s.bring.join(', ') });
+
+  const metaHtml = meta.length ? `<div class="metadata-grid">${meta.map(m=>`
+    <div class="meta-item">${m.icon}
+      <div><span class="meta-label">${m.label}</span><span class="meta-value">${m.val}</span></div>
+    </div>`).join('')}</div>` : '';
+
+  const audioHtml = s.audio
+    ? `<div class="audio-section">
+        <button class="audio-play-btn"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+        <div class="audio-waveform">${Array.from({length:20},()=>'<div class="wave-bar"></div>').join('')}</div>
+        <span class="audio-time">2:34</span>
+        <button class="audio-generate">Generuj</button>
+      </div>`
+    : `<div class="audio-section" style="background:var(--cream);">
+        <span class="audio-label" style="font-size:0.75rem;color:var(--text-3);">Brak audio</span>
+        <button class="audio-generate" style="margin-left:auto;background:var(--gold-light);border-color:var(--gold);">Generuj audio z opisu</button>
+      </div>`;
+
+  sheetContent.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-hero">
+      <img src="${s.photo.replace('/100/100','/640/360')}" alt="${s.title}">
+      <div class="sheet-hero-text">
+        <h2>${s.title}</h2>
+        <p>${s.summary}</p>
+      </div>
+    </div>
+    <div class="sheet-body">
+      ${metaHtml}
+      <div class="sheet-desc" id="sheetDesc">${s.desc}</div>
+      <div class="desc-actions">
+        <button class="copy-btn" onclick="copyDesc(event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Kopiuj opis
+        </button>
+      </div>
+      ${audioHtml}
+      <div class="sheet-links">
+        ${s.links.map(l=>`<a href="${l.u}" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${l.l}
+        </a>`).join('')}
+      </div>
+    </div>
+  `;
+  sheetOverlay.classList.add('open');
+  detailSheet.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSheet() {
+  sheetOverlay.classList.remove('open');
+  detailSheet.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function copyDesc(e) {
+  const text = document.getElementById('sheetDesc').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = e.currentTarget;
+    const orig = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Skopiowano!`;
+    setTimeout(()=>{btn.classList.remove('copied');btn.innerHTML=orig;},1500);
+  });
+}
+
+render();
+</script>
+
+</body>
+</html>

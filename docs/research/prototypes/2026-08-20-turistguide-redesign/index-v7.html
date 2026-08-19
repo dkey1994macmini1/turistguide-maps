@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Turistguide — v7 (Header Hero + Stonowany Accent + Map Interaction)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1c1917;
+  --stone: #78716c;
+  --muted: #a8a29e;
+  --border: #e7e5e4;
+  --surface: #fafaf9;
+  --bg: #ffffff;
+  --accent: #9a3412;        /* stonowany ciemny copper/brick */
+  --accent-light: #fff7ed;
+  --done: #059669;
+  --warn: #d97706;
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: 'Outfit', sans-serif; color: var(--ink); background: var(--surface); -webkit-font-smoothing: antialiased; }
+body { min-height: 100dvh; }
+
+/* ═══ Hero Header (jak fotoprzewodnik) ═══ */
+.hero-header {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  min-height: 220px;
+  max-height: 320px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px;
+}
+.hero-header img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.hero-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(28,25,23,0.85) 0%, rgba(28,25,23,0.4) 50%, rgba(28,25,23,0.15) 100%);
+  z-index: 1;
+}
+.hero-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  z-index: 3;
+}
+.hero-back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+}
+.hero-back svg { stroke: rgba(255,255,255,0.8); }
+.hero-actions { display: flex; gap: 6px; }
+.hero-icon-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--bg);
+  display: grid; place-items: center;
+  cursor: pointer; transition: all 0.15s;
+}
+.hero-icon-btn:hover { background: rgba(255,255,255,0.25); }
+.hero-icon-btn svg { width: 16px; height: 16px; }
+.hero-text { position: relative; z-index: 2; }
+.hero-text h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--bg);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.hero-text p {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.7);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+.hero-text a {
+  color: var(--accent-light);
+  font-weight: 600;
+  text-decoration: none;
+}
+.hero-text a:hover { text-decoration: underline; }
+
+/* ═══ Day Tabs ═══ */
+.day-tabs-wrap { position: sticky; top: 0; z-index: 90; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.day-tabs-wrap::-webkit-scrollbar { display: none; }
+.day-tabs { display: flex; gap: 6px; padding: 10px 16px; min-width: min-content; }
+.day-tab { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; border-radius: var(--radius-sm); background: var(--bg); border: 1.5px solid var(--border); font-size: 0.75rem; font-weight: 500; color: var(--stone); cursor: pointer; transition: all 0.15s; white-space: nowrap; min-width: 60px; }
+.day-tab .d-num { font-size: 0.9rem; font-weight: 700; color: var(--ink); }
+.day-tab .d-meta { font-size: 0.68rem; color: var(--muted); }
+.day-tab:hover { border-color: var(--accent); }
+.day-tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.day-tab.active .d-num, .day-tab.active .d-meta { color: var(--bg); }
+.day-tab.past { opacity: 0.4; }
+
+/* ═══ Stop List ═══ */
+.stop-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.stop-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
+.stop-item:hover { border-color: var(--accent); }
+.stop-item:active { transform: scale(0.995); }
+.stop-item.done { opacity: 0.45; }
+.stop-item.done .stop-title { text-decoration: line-through; color: var(--muted); }
+.stop-thumb { width: 48px; height: 48px; border-radius: var(--radius-sm); flex-shrink: 0; overflow: hidden; background: var(--surface); }
+.stop-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.stop-main { flex: 1; min-width: 0; }
+.stop-title { font-size: 0.88rem; font-weight: 600; color: var(--ink); line-height: 1.25; }
+.stop-meta-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+.stop-meta-chip { display: flex; align-items: center; gap: 3px; font-size: 0.7rem; color: var(--muted); }
+.stop-meta-chip svg { width: 12px; height: 12px; }
+.stop-meta-chip.warn { color: var(--warn); }
+.stop-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg); display: grid; place-items: center; flex-shrink: 0; cursor: pointer; transition: all 0.15s; }
+.stop-check:hover { border-color: var(--done); }
+.stop-check.checked { background: var(--done); border-color: var(--done); color: var(--bg); }
+.stop-check svg { width: 12px; height: 12px; }
+
+/* ═══ Bottom Sheet ═══ */
+.sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.sheet-overlay.open { opacity: 1; pointer-events: auto; }
+.sheet { position: fixed; bottom: 0; left: 0; right: 0; z-index: 210; background: var(--bg); border-radius: var(--radius-lg) var(--radius-lg) 0 0; max-height: 92dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.16,1,0.3,1); padding-bottom: env(safe-area-inset-bottom,0px); }
+.sheet.open { transform: translateY(0); }
+.sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 10px auto; }
+.sheet-close { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.35); backdrop-filter: blur(4px); color: var(--bg); border: none; display: grid; place-items: center; cursor: pointer; z-index: 5; }
+.sheet-close svg { width: 16px; height: 16px; }
+
+.sheet-hero { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; }
+.sheet-hero img { width: 100%; height: 100%; object-fit: cover; }
+.sheet-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(28,25,23,0.65), transparent 55%); }
+.sheet-hero-text { position: absolute; bottom: 14px; left: 16px; right: 50px; z-index: 2; color: var(--bg); }
+.sheet-hero-text h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 600; line-height: 1.2; }
+.sheet-hero-text p { font-size: 0.82rem; opacity: 0.85; margin-top: 3px; line-height: 1.3; }
+
+.sheet-body { padding: 16px; }
+
+/* Meta pills */
+.meta-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.meta-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; background: var(--surface); border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--stone); border: 1px solid var(--border); }
+.meta-pill svg { width: 13px; height: 13px; color: var(--accent); }
+.meta-pill.warn { background: #fffbeb; border-color: #fcd34d; color: var(--warn); }
+.meta-pill.warn svg { color: var(--warn); }
+
+/* Description */
+.desc-block { margin-bottom: 16px; }
+.desc-text { font-size: 0.9rem; line-height: 1.7; color: var(--stone); max-height: 140px; overflow: hidden; position: relative; }
+.desc-text.expanded { max-height: none; }
+.desc-text::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(to top, var(--bg), transparent); pointer-events: none; }
+.desc-text.expanded::after { display: none; }
+.desc-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.desc-more { font-size: 0.78rem; font-weight: 600; color: var(--accent); background: none; border: none; padding: 0; cursor: pointer; }
+.desc-more:hover { text-decoration: underline; }
+.copy-link { display: flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 500; color: var(--muted); background: none; border: none; padding: 0; cursor: pointer; }
+.copy-link:hover { color: var(--accent); }
+.copy-link svg { width: 13px; height: 13px; }
+.copy-link.copied { color: var(--done); }
+
+/* Audio */
+.audio-block { padding: 14px; background: var(--accent-light); border-radius: var(--radius); border: 1px solid #fed7aa; margin-bottom: 16px; }
+.audio-block.empty { background: var(--surface); border-color: var(--border); }
+.audio-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.audio-play { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--bg); border: none; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; transition: transform 0.15s; }
+.audio-play:active { transform: scale(0.92); }
+.audio-play svg { width: 16px; height: 16px; }
+.audio-info { flex: 1; }
+.audio-title { font-size: 0.82rem; font-weight: 600; color: var(--ink); }
+.audio-sub { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+.audio-waveform { height: 28px; display: flex; align-items: center; gap: 2px; }
+.audio-waveform .bar { flex: 1; background: #fdba74; border-radius: 2px; }
+.audio-waveform .bar:nth-child(3n) { height: 55%; }
+.audio-waveform .bar:nth-child(3n+1) { height: 35%; }
+.audio-waveform .bar:nth-child(3n+2) { height: 75%; }
+.audio-actions { display: flex; gap: 8px; margin-top: 10px; }
+.audio-btn { flex: 1; padding: 8px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; text-align: center; cursor: pointer; border: none; }
+.audio-btn.primary { background: var(--accent); color: var(--bg); }
+.audio-btn.secondary { background: var(--bg); color: var(--accent); border: 1px solid var(--accent); }
+
+/* Links */
+.sheet-links { display: flex; flex-direction: column; gap: 6px; }
+.sheet-link { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: var(--radius-sm); color: var(--ink); font-size: 0.85rem; font-weight: 500; text-decoration: none; border: 1px solid var(--border); transition: all 0.15s; }
+.sheet-link:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+.sheet-link svg { width: 16px; height: 16px; color: var(--stone); }
+.sheet-link:hover svg { color: var(--accent); }
+
+/* FAB */
+.fab { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom,0)); right: 16px; z-index: 150; width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: var(--bg); border: none; display: grid; place-items: center; cursor: pointer; box-shadow: 0 4px 14px rgba(154,52,18,0.3); transition: transform 0.15s; }
+.fab:hover { transform: scale(1.05); }
+.fab:active { transform: scale(0.95); }
+.fab svg { width: 20px; height: 20px; }
+
+/* ═══ Map Modal + Marker Tap ═══ */
+.map-modal { position: fixed; inset: 0; z-index: 250; background: var(--bg); transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.16,1,0.3,1); display: flex; flex-direction: column; }
+.map-modal.open { transform: translateY(0); }
+.map-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg); flex-shrink: 0; }
+.map-header h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 600; }
+.map-body { flex: 1; position: relative; background: #e7e5e4; overflow: hidden; }
+.map-placeholder { position: absolute; inset: 0; display: grid; place-items: center; }
+
+/* Map markers */
+.map-marker-wrap { position: absolute; cursor: pointer; }
+.map-marker {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent); color: var(--bg);
+  display: grid; place-items: center;
+  font-size: 0.75rem; font-weight: 700;
+  border: 3px solid var(--bg);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: transform 0.2s;
+}
+.map-marker:hover { transform: scale(1.15); }
+.map-marker.active { background: var(--ink); transform: scale(1.2); z-index: 10; }
+.map-marker.visited { background: var(--done); }
+
+/* Map tooltip on hover/tap */
+.map-tooltip {
+  position: absolute;
+  bottom: 40px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.map-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -6px; left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0;
+  border-style: solid;
+  border-color: var(--bg) transparent transparent;
+}
+.map-marker-wrap:hover .map-tooltip,
+.map-marker-wrap.active .map-tooltip { opacity: 1; }
+
+/* Map bottom card (like Google Maps) */
+.map-card {
+  position: absolute;
+  bottom: 16px; left: 16px; right: 16px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+  border: 1px solid var(--border);
+  display: none;
+  z-index: 10;
+}
+.map-card.open { display: flex; align-items: center; gap: 12px; }
+.map-card-thumb { width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; background: var(--surface); }
+.map-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.map-card-info { flex: 1; min-width: 0; }
+.map-card-title { font-size: 0.9rem; font-weight: 600; color: var(--ink); }
+.map-card-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.map-card-btn {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .stop-list { max-width: 640px; margin: 0 auto; padding: 16px 24px; }
+  .day-tabs-wrap { max-width: 640px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+  .sheet { max-width: 480px; left: 50%; right: auto; transform: translate(-50%, 100%); }
+  .sheet.open { transform: translate(-50%, 0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stop-item { animation: fadeUp 0.25s ease forwards; }
+</style>
+</head>
+<body>
+
+<!-- ═══ Hero Header ═══ -->
+<header class="hero-header">
+  <img src="https://picsum.photos/seed/tuscany-hero-header/800/500" alt="Toskania">
+  <div class="hero-top">
+    <a href="#" class="hero-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M15 18l-6-6 6-6"/></svg>
+      Plany
+    </a>
+    <div class="hero-actions">
+      <button class="hero-icon-btn" aria-label="Offline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M1 4v6h6M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+      </button>
+      <button class="hero-icon-btn" aria-label="Ustawienia">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="hero-text">
+    <h1>Toskania — Sierpien 2026</h1>
+    <p>22-26.08 · 5 dni · 5 osob · <a href="#">Foto-przewodnik →</a></p>
+  </div>
+</header>
+
+<!-- Day Tabs -->
+<div class="day-tabs-wrap">
+  <div class="day-tabs">
+    <button class="day-tab past"><span class="d-num">D1</span><span>Bolonia</span><span class="d-meta">5/5 zrob.</span></button>
+    <button class="day-tab active"><span class="d-num">D2</span><span>Greve</span><span class="d-meta">2/4 zrob.</span></button>
+    <button class="day-tab"><span class="d-num">D3</span><span>Siena</span><span class="d-meta">0/3 zrob.</span></button>
+    <button class="day-tab"><span class="d-num">D4</span><span>Val d'Orcia</span><span class="d-meta">0/4 zrob.</span></button>
+    <button class="day-tab"><span class="d-num">D5</span><span>Powrot</span><span class="d-meta">0/2 zrob.</span></button>
+  </div>
+</div>
+
+<!-- Stop List -->
+<div class="stop-list" id="stopList"></div>
+
+<!-- FAB -->
+<button class="fab" onclick="toggleMap()" aria-label="Mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></button>
+
+<!-- Bottom Sheet -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="detailSheet">
+  <button class="sheet-close" onclick="closeSheet()" aria-label="Zamknij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  <div id="sheetContent"></div>
+</div>
+
+<!-- Map Modal -->
+<div class="map-modal" id="mapModal">
+  <div class="map-header">
+    <h3>Mapa trasy — D2 Greve</h3>
+    <button class="hero-icon-btn" style="background:rgba(0,0,0,0.08);border-color:rgba(0,0,0,0.12);color:var(--stone);" onclick="toggleMap()" aria-label="Zamknij">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="map-body">
+    <div class="map-placeholder">
+      <!-- Markers -->
+      <div class="map-marker-wrap" style="position:absolute;top:25%;left:20%;" onclick="tapMarker('s1')" onmouseenter="showMarkerTooltip(this,'Bolonia Airport')" onmouseleave="hideMarkerTooltip(this)">
+        <div class="map-marker visited" id="marker-s1">1</div>
+        <div class="map-tooltip">Bolonia Airport</div>
+      </div>
+      <div class="map-marker-wrap" style="position:absolute;top:45%;left:55%;" onclick="tapMarker('s2')" onmouseenter="showMarkerTooltip(this,'InPost Locker')" onmouseleave="hideMarkerTooltip(this)">
+        <div class="map-marker visited" id="marker-s2">2</div>
+        <div class="map-tooltip">InPost Locker</div>
+      </div>
+      <div class="map-marker-wrap" style="position:absolute;top:35%;left:75%;" onclick="tapMarker('s3')" onmouseenter="showMarkerTooltip(this,'Bottega a CAMPANA')" onmouseleave="hideMarkerTooltip(this)">
+        <div class="map-marker active" id="marker-s3">3</div>
+        <div class="map-tooltip">Bottega a CAMPANA</div>
+      </div>
+      <div class="map-marker-wrap" style="position:absolute;top:60%;left:40%;" onclick="tapMarker('s4')" onmouseenter="showMarkerTooltip(this,'Fattoria Poggerino')" onmouseleave="hideMarkerTooltip(this)">
+        <div class="map-marker" id="marker-s4">4</div>
+        <div class="map-tooltip">Fattoria Poggerino</div>
+      </div>
+      <div class="map-marker-wrap" style="position:absolute;top:70%;left:65%;" onclick="tapMarker('s5')" onmouseenter="showMarkerTooltip(this,'Pizza Hot')" onmouseleave="hideMarkerTooltip(this)">
+        <div class="map-marker" id="marker-s5">5</div>
+        <div class="map-tooltip">Pizza Hot</div>
+      </div>
+      
+      <!-- Bottom card (shows on marker tap) -->
+      <div class="map-card" id="mapCard">
+        <div class="map-card-thumb"><img id="mapCardImg" src="" alt=""></div>
+        <div class="map-card-info">
+          <div class="map-card-title" id="mapCardTitle"></div>
+          <div class="map-card-meta" id="mapCardMeta"></div>
+        </div>
+        <button class="map-card-btn" id="mapCardBtn" onclick="openCardDetail()">Otworz</button>
+      </div>
+      
+      <div class="map-placeholder-text">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--stone)" stroke-width="1.5" style="display:block;margin:0 auto 8px;opacity:.4;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Tu pojawi sie mapa Leaflet
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const stops = [
+  { id:'s1', order:1, title:'Bolonia Airport', summary:'Odbior auta, parking P2.', photo:'https://picsum.photos/seed/stop-bol/100/100', duration:'60-90 min', cost:'0 EUR', warning:null, reservation:null, bring:[], links:[{l:'Mapa',u:'#'}], done:true,
+    desc:'Lotnisko Guglielmo Marconi — 6 km od centrum. Odbior bagazu i auta zajmuje 15-20 min.' },
+  { id:'s2', order:2, title:'InPost Locker', summary:'Szybki odbior przed Chianti.', photo:'https://picsum.photos/seed/stop-inpost/100/100', duration:'5-10 min', cost:null, warning:null, reservation:null, bring:['Kod odbioru'], links:[{l:'Mapa',u:'#'}], done:true,
+    desc:'Paczkomat przy SR 222, otoczony cyprysami. Zatrzymaj sie na poboczu.' },
+  { id:'s3', order:3, title:'Bottega a CAMPANA', summary:'Lunch w Panzano.', photo:'https://picsum.photos/seed/stop-lunch/100/100', duration:'60-90 min', cost:'35-50 EUR/os', warning:'Ograniczone miejsca', reservation:'Rekomendowana rezerwacja na weekendy', bring:[], links:[{l:'Mapa',u:'#'},{l:'Rezerwacja',u:'#'}], done:false,
+    desc:'Panzano to mala winiarska wioska w sercu Chianti, znana przede wszystkim z Dario Cecchiniego, legendarnego rzeznika i restauratora. Bottega a CAMPANA to bardziej kameralna alternatywa wobec jego glownej restauracji. Menu opiera sie na sezonowych, lokalnych produktach: domowy makaron al ragu, grillowane warzywa, i oczywiscie lokalne Chianti Classico. Atmosfera jest niespieszna i rodzinna. Po lunchu warto przejsc sie po uliczkach Panzano i zobaczyc lokalne sklepiki z delikatesami.',
+    audio:true },
+  { id:'s4', order:4, title:'Fattoria Poggerino', summary:'Apartament i basen.', photo:'https://picsum.photos/seed/stop-farm/100/100', duration:'—', cost:'180 EUR/noc', warning:null, reservation:'Zarezerwowane: 22-24.08', bring:['Stroj kapielowy','Klapki'], links:[{l:'Mapa',u:'#'}], done:false,
+    desc:'Rodzinna agroturystyka prowadzona przez rodzine Pieraccini od pokolen. Zlokalizowana miedzy Radda in Chianti a Gaiole, oferuje przepiekne widoki na winnice i oliwki.' },
+  { id:'s5', order:5, title:'Pizza Hot', summary:'Kolacja w Radda.', photo:'https://picsum.photos/seed/stop-pizza/100/100', duration:'45-60 min', cost:'15-25 EUR/os', warning:'Kolejki w weekendy', reservation:null, bring:[], links:[{l:'Mapa',u:'#'}], done:false,
+    desc:'Rodzinna pizzeria w Radda. Margherita i Chianti Classico w karafce za 12 EUR.' },
+];
+
+function render() {
+  document.getElementById('stopList').innerHTML = stops.map(s => `
+    <div class="stop-item ${s.done?'done':''}" data-id="${s.id}">
+      <div class="stop-thumb"><img src="${s.photo}" alt="" loading="lazy"></div>
+      <div class="stop-main" onclick="openSheet('${s.id}')">
+        <div class="stop-title">${s.order}. ${s.title}</div>
+        <div class="stop-meta-row">
+          ${s.duration ? `<span class="stop-meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${s.duration}</span>` : ''}
+          ${s.cost ? `<span class="stop-meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> ${s.cost}</span>` : ''}
+          ${s.warning ? `<span class="stop-meta-chip warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${s.warning}</span>` : ''}
+        </div>
+      </div>
+      <div class="stop-check ${s.done?'checked':''}" onclick="toggleDone('${s.id}',event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleDone(id,e){
+  e.stopPropagation();
+  const s=stops.find(x=>x.id===id);
+  if(s){s.done=!s.done;render();}
+}
+
+// ═══ Sheet ═══
+const sheetOverlay = document.getElementById('sheetOverlay');
+const detailSheet = document.getElementById('detailSheet');
+const sheetContent = document.getElementById('sheetContent');
+let activeStopId = null;
+
+function openSheet(id) {
+  activeStopId = id;
+  const s = stops.find(x=>x.id===id);
+  if(!s) return;
+
+  const pills = [];
+  if(s.duration && s.duration!=='—') pills.push({ icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', text:s.duration });
+  if(s.cost) pills.push({ icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>', text:s.cost });
+  if(s.reservation) pills.push({ icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', text:s.reservation });
+  if(s.bring.length) pills.push({ icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>', text:s.bring.join(', ') });
+  if(s.warning) pills.push({ icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>', text:s.warning, warn:true });
+
+  const pillsHtml = pills.length ? `<div class="meta-pills">${pills.map(p=>`
+    <span class="meta-pill ${p.warn?'warn':''}">${p.icon}${p.text}</span>`).join('')}</div>` : '';
+
+  const audioHtml = s.audio
+    ? `<div class="audio-block">
+        <div class="audio-header">
+          <button class="audio-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+          <div class="audio-info">
+            <div class="audio-title">Audio przeglad</div>
+            <div class="audio-sub">2:34 · Kliknij by odtworzyc</div>
+          </div>
+        </div>
+        <div class="audio-waveform">${Array.from({length:24},()=>'<div class="bar"></div>').join('')}</div>
+        <div class="audio-actions">
+          <button class="audio-btn primary">Odtworz</button>
+          <button class="audio-btn secondary">Pobierz</button>
+          <button class="audio-btn secondary">Generuj na nowo</button>
+        </div>
+      </div>`
+    : `<div class="audio-block empty">
+        <div class="audio-header">
+          <div class="audio-info" style="margin-left:0;">
+            <div class="audio-title">Brak audio</div>
+            <div class="audio-sub">Wygeneruj audio z opisu by odtworzyc w drodze</div>
+          </div>
+        </div>
+        <div class="audio-actions" style="margin-top:12px;">
+          <button class="audio-btn primary">Generuj audio z opisu</button>
+        </div>
+      </div>`;
+
+  sheetContent.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-hero">
+      <img src="${s.photo.replace('/100/100','/640/360')}" alt="${s.title}">
+      <div class="sheet-hero-text">
+        <h2>${s.title}</h2>
+        <p>${s.summary}</p>
+      </div>
+    </div>
+    <div class="sheet-body">
+      ${pillsHtml}
+      <div class="desc-block">
+        <div class="desc-text collapsed" id="sheetDesc">${s.desc}</div>
+        <div class="desc-footer">
+          <button class="desc-more" id="descMore" onclick="toggleDesc()">Rozwin opis</button>
+          <button class="copy-link" onclick="copyDesc(event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Kopiuj
+          </button>
+        </div>
+      </div>
+      ${audioHtml}
+      <div class="sheet-links">
+        ${s.links.map(l=>`<a href="${l.u}" class="sheet-link" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${l.l}
+        </a>`).join('')}
+      </div>
+    </div>
+  `;
+  sheetOverlay.classList.add('open');
+  detailSheet.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSheet() {
+  sheetOverlay.classList.remove('open');
+  detailSheet.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function toggleDesc() {
+  const el = document.getElementById('sheetDesc');
+  const btn = document.getElementById('descMore');
+  if(el.classList.contains('collapsed')){
+    el.classList.remove('collapsed');
+    btn.textContent = 'Zwin opis';
+  } else {
+    el.classList.add('collapsed');
+    btn.textContent = 'Rozwin opis';
+  }
+}
+
+function copyDesc(e) {
+  const text = document.getElementById('sheetDesc').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = e.currentTarget;
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Skopiowano`;
+    setTimeout(()=>{
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Kopiuj`;
+    },1500);
+  });
+}
+
+// ═══ Map Interactions ═══
+let selectedMarkerId = null;
+
+function toggleMap() {
+  const m = document.getElementById('mapModal');
+  const wasOpen = m.classList.contains('open');
+  m.classList.toggle('open');
+  if(!wasOpen){
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+    hideMapCard();
+  }
+}
+
+function showMarkerTooltip(el, text) {
+  // CSS handles tooltip via :hover
+}
+function hideMarkerTooltip(el) {
+  // CSS handles tooltip via :hover
+}
+
+function tapMarker(id) {
+  // Reset all markers
+  document.querySelectorAll('.map-marker').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.map-marker-wrap').forEach(w => w.classList.remove('active'));
+  
+  // Activate tapped
+  const marker = document.getElementById('marker-'+id);
+  const wrap = marker?.parentElement;
+  if(marker) marker.classList.add('active');
+  if(wrap) wrap.classList.add('active');
+  
+  selectedMarkerId = id;
+  const s = stops.find(x=>x.id===id);
+  if(!s) return;
+  
+  document.getElementById('mapCardImg').src = s.photo;
+  document.getElementById('mapCardTitle').textContent = s.title;
+  document.getElementById('mapCardMeta').textContent = s.summary;
+  document.getElementById('mapCard').classList.add('open');
+}
+
+function openCardDetail() {
+  if(!selectedMarkerId) return;
+  hideMapCard();
+  toggleMap();
+  setTimeout(()=>openSheet(selectedMarkerId), 350);
+}
+
+function hideMapCard() {
+  document.getElementById('mapCard').classList.remove('open');
+}
+
+// Close map card on tap outside
+// document.addEventListener('click', (e) => {
+//   if(!e.target.closest('.map-card') && !e.target.closest('.map-marker-wrap')) hideMapCard();
+// });
+
+render();
+</script>
+
+</body>
+</html>
