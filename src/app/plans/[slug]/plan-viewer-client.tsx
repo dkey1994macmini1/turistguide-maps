@@ -2,20 +2,15 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { PlanReadModel, DayWithStops, StopItem } from "@/types/api";
-import dynamic from "next/dynamic";
 import { DaySwitcher } from "./day-switcher";
 import { StopList } from "./stop-list";
 import { StopDetail } from "./stop-detail";
 import { SettingsMenu } from "./settings-menu";
+import { HeroHeader } from "./hero-header";
+import { MapModal } from "./map-modal";
 import { OfflineDialog } from "@/features/offline/offline-dialog";
 import { OfflineBadge } from "@/features/offline/offline-badge";
 import { OfflineMap } from "@/features/offline/offline-map";
-
-// Leaflet requires browser APIs — must skip SSR
-const TravelMap = dynamic(() => import("./travel-map").then((m) => ({ default: m.TravelMap })), {
-  ssr: false,
-  loading: () => <div className="travel-map travel-map-loading" />,
-});
 
 interface PlanViewerClientProps {
   slug: string;
@@ -29,6 +24,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [audioManagement, setAudioManagement] = useState(false);
   const [showOfflineDialog, setShowOfflineDialog] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== "undefined" ? navigator.onLine : true
   );
@@ -201,16 +197,6 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
     return idx >= 0 ? idx : Math.max(0, data.days.length - 1);
   }
 
-  function computeIsPastDay(dayNumber: number, startDateStr: string | null): boolean {
-    if (!startDateStr) return false;
-    const start = new Date(startDateStr);
-    const dayStart = new Date(start);
-    dayStart.setDate(dayStart.getDate() + (dayNumber - 1));
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    return dayStart < now;
-  }
-
   async function handleStartDateChange(date: string | null) {
     try {
       const res = await fetch(`/api/plans/${slug}`, {
@@ -243,13 +229,26 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
     }
   }
 
+  // Find hero photo — use first stop with photo, or plan cover if available
+  const heroPhoto = useMemo(() => {
+    for (const day of days) {
+      for (const stop of day.stops) {
+        if (stop.photo) {
+          return { src: stop.photo.src, alt: stop.photo.alt };
+        }
+      }
+    }
+    return null;
+  }, [days]);
+
   if (loading) {
     return (
       <div className="plan-viewer">
-        <header className="plan-header">
-          <a href="/" className="back-link">← Plans</a>
-          <h1>Loading...</h1>
-        </header>
+        <div className="hero-header" style={{ minHeight: "120px", background: "var(--surface)" }}>
+          <div className="hero-header-content">
+            <h1 style={{ color: "var(--muted)" }}>Loading...</h1>
+          </div>
+        </div>
       </div>
     );
   }
@@ -268,12 +267,16 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
 
   return (
     <div className="plan-viewer">
-      <header className="plan-header">
-        <div className="plan-header-row">
-          <a href={plan.archivedAt ? "/plans/archived" : "/"} className="back-link">
-            {plan.archivedAt ? "← Archiwalne plany" : "← Plans"}
-          </a>
-          <div className="plan-header-actions">
+      <HeroHeader
+        title={plan.title}
+        description={plan.description}
+        photoSrc={heroPhoto?.src ?? null}
+        photoAlt={heroPhoto?.alt}
+        artifactUrl={artifactUrl}
+        backHref={plan.archivedAt ? "/plans/archived" : "/"}
+        backLabel={plan.archivedAt ? "Archiwalne plany" : "Plans"}
+        actions={
+          <>
             <OfflineBadge
               isOnline={isOnline}
               hasOfflineSnapshot={hasOfflineSnapshot}
@@ -290,62 +293,70 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
               archived={plan.archivedAt !== null}
               onArchiveToggle={handleArchiveToggle}
             />
-          </div>
-        </div>
-        <h1>{plan.title}</h1>
-        {(plan.description || artifactUrl) && (
-          <div className="plan-description">
-            {plan.description && <p>{plan.description}</p>}
-            {artifactUrl && (
-              <p>
-                <a href={artifactUrl}>Otwórz foto-przewodnik →</a>
-              </p>
-            )}
-          </div>
-        )}
-      </header>
+          </>
+        }
+      />
 
       <div className="plan-body">
-        <div className="map-section" ref={mapContainerRef}>
-          {isOnline ? (
-            <TravelMap
-              activeDay={activeDay}
-              allDays={days}
-              selectedStopId={selectedStopId}
-              mapCenter={mapCenter}
-              dayBounds={dayBounds}
-              onMarkerClick={handleMarkerClick}
-              onMapClick={handleCloseDetail}
-            />
-          ) : (
-            <OfflineMap slug={slug} alt={`Mapa offline — ${plan.title}`} />
-          )}
-        </div>
+        <DaySwitcher
+          days={days}
+          activeIndex={activeDayIndex}
+          onDayChange={handleDayChange}
+          startDate={plan.startDate}
+        />
 
-        <div className="sidebar">
-          <DaySwitcher
-            days={days}
-            activeIndex={activeDayIndex}
-            onDayChange={handleDayChange}
-            startDate={plan.startDate}
+        {activeDay && (
+          <StopList
+            stops={activeDay.stops}
+            selectedStopId={selectedStopId}
+            onSelectStop={handleStopSelect}
+            onToggleVisited={handleToggleVisited}
+            onReorder={handleReorderStops}
           />
-
-          {activeDay && (
-            <StopList
-              stops={activeDay.stops}
-              selectedStopId={selectedStopId}
-              onSelectStop={handleStopSelect}
-              onToggleVisited={handleToggleVisited}
-              onReorder={handleReorderStops}
-            />
-          )}
-
-          {selectedStop && (
-            <StopDetail stop={selectedStop} onClose={handleCloseDetail} audioManagement={audioManagement} slug={slug} />
-          )}
-        </div>
+        )}
       </div>
 
+      {/* FAB Map button */}
+      <button
+        className="fab-map"
+        onClick={() => setShowMapModal(true)}
+        aria-label="Otwórz mapę"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 21s-7-6.5-7-12a7 7 0 1 1 14 0c0 5.5-7 12-7 12z" />
+          <circle cx="12" cy="9" r="2.5" />
+        </svg>
+      </button>
+
+      {/* Bottom sheet — stop detail */}
+      {selectedStop && (
+        <StopDetail
+          stop={selectedStop}
+          onClose={handleCloseDetail}
+          audioManagement={audioManagement}
+          slug={slug}
+        />
+      )}
+
+      {/* Map modal */}
+      <MapModal
+        open={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        activeDay={activeDay}
+        allDays={days}
+        selectedStopId={selectedStopId}
+        mapCenter={mapCenter}
+        dayBounds={dayBounds}
+        onMarkerClick={handleMarkerClick}
+        isOnline={isOnline}
+        slug={slug}
+        planTitle={plan.title}
+        offlineMap={
+          <OfflineMap slug={slug} alt={`Mapa offline — ${plan.title}`} />
+        }
+      />
+
+      {/* Offline dialog */}
       {showOfflineDialog && (
         <OfflineDialog
           slug={slug}

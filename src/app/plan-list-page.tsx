@@ -37,6 +37,18 @@ export function PlanListPage({ archived }: PlanListPageProps) {
     }
   }
 
+  function formatDateRange(startDate: string | null): string | null {
+    if (!startDate) return null;
+    const start = new Date(startDate);
+    const formatted = start.toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
+    return formatted;
+  }
+
+  function formatCreatedAt(createdAt: string): string {
+    const d = new Date(createdAt);
+    return d.toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" });
+  }
+
   return (
     <div className="page-container">
       <header className="page-header">
@@ -73,6 +85,9 @@ export function PlanListPage({ archived }: PlanListPageProps) {
                 <h2>{plan.title}</h2>
                 <p>{plan.description}</p>
                 <span className="plan-slug">{plan.slug}</span>
+                <div className="plan-card-meta">
+                  {formatCreatedAt(plan.createdAt)}
+                </div>
               </a>
               <button
                 type="button"

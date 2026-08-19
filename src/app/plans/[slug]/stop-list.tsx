@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import Image from "next/image";
 import type { StopItem } from "@/types/api";
 import {
   DndContext,
@@ -86,11 +87,49 @@ function SortableStopItem({
           </svg>
         </span>
 
+        {/* Thumbnail */}
+        {stop.photo ? (
+          <Image
+            src={stop.photo.src}
+            alt={stop.photo.alt}
+            width={48}
+            height={48}
+            className="stop-thumb"
+          />
+        ) : (
+          <span className="stop-thumb-placeholder">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 21s-7-6.5-7-12a7 7 0 1 1 14 0c0 5.5-7 12-7 12z" />
+              <circle cx="12" cy="9" r="2.5" />
+            </svg>
+          </span>
+        )}
+
         <span className="stop-order">{index + 1}</span>
         <div className="stop-item-content">
           <strong className="stop-title">{stop.title}</strong>
           {stop.summary && (
             <span className="stop-summary">{stop.summary}</span>
+          )}
+          {/* Meta chips */}
+          {(stop.duration || stop.cost || stop.warnings.length > 0) && (
+            <div className="stop-meta-chips">
+              {stop.duration && (
+                <span className="stop-meta-chip">
+                  ⏱ {stop.duration.min}-{stop.duration.max} min
+                </span>
+              )}
+              {stop.cost && (
+                <span className="stop-meta-chip">
+                  $ {stop.cost.amount} {stop.cost.currency}
+                </span>
+              )}
+              {stop.warnings.length > 0 && (
+                <span className="stop-meta-chip warn">
+                  ⚠ {stop.warnings.length}
+                </span>
+              )}
+            </div>
           )}
         </div>
         <span
