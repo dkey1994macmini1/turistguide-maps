@@ -66,6 +66,8 @@ describe("Plan type", () => {
       slug: Slug("hawaii-trip"),
       title: "Hawaii Trip",
       description: "A wonderful trip to Hawaii",
+      startDate: null,
+      archivedAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -84,6 +86,8 @@ describe("Plan type", () => {
       slug: Slug("test"),
       title: "Test",
       description: "Desc",
+      startDate: null,
+      archivedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

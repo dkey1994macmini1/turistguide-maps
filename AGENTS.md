@@ -12,6 +12,15 @@ On every new session in this project:
 - **Database:** turistguide-maps PostgreSQL (via Drizzle ORM)
 - **Production:** `turistguide.karwackid.cloud` (behind Cloudflare Access)
 
+## Local Runtime / Public Exposure
+
+- Expected exposed local port: `3000`
+- Bind address: `127.0.0.1`
+- Public hostname: `turistguide.karwackid.cloud`
+- Host port registry: `/Users/damiankarwacki/projects/infra/PORTS.md`
+
+Cloudflare Tunnel routes `turistguide.karwackid.cloud` directly to `http://127.0.0.1:3000`. If `next dev` or `next start` uses a different port, verify the running process before changing tunnel routing.
+
 ## Architecture Reminders
 
 - **Leaflet SSR Fix:** All Leaflet components must dynamic-import with `ssr: false`

@@ -19,6 +19,36 @@ export const costSchema = z
   .optional()
   .describe("Cost info — amount, currency code, optional note. Pass null to clear.");
 
+export const photoSchema = z
+  .object({
+    src: z
+      .string()
+      .regex(
+        /^\/images\/stops\/[a-z0-9][a-z0-9-]*\.(?:jpe?g|png|webp)$/,
+        "Photo must use a local /images/stops/ asset path.",
+      ),
+    alt: z.string().min(1).max(500),
+    photographer: z.string().min(1).max(200),
+    photoUrl: z
+      .string()
+      .url()
+      .refine(
+        (url) => {
+          const parsed = new URL(url);
+          return (
+            parsed.protocol === "https:" &&
+            (parsed.hostname === "pexels.com" || parsed.hostname === "www.pexels.com") &&
+            parsed.pathname.startsWith("/photo/")
+          );
+        },
+        "Photo credit must link to an HTTPS Pexels photo page.",
+      )
+      .optional(),
+  })
+  .nullable()
+  .optional()
+  .describe("Optional locally hosted photo. Pexels photos require their HTTPS photo-page attribution URL; user-provided photos may omit it. Pass null to clear.");
+
 export const stopSchema = z.object({
   title: z.string().describe("Stop name"),
   summary: z
@@ -46,5 +76,6 @@ export const stopSchema = z.object({
   warnings: z.array(z.string()).optional().default([]).describe("Warnings, e.g. ['Steep climb', 'No shade'] (replaces existing)"),
   alternative: z.string().nullable().optional().describe("Alternative if this stop doesn't work out. Pass null to clear."),
   audioUrl: z.string().nullable().optional().describe("Audio file URL (e.g. /api/audio/stops/stop-id). Preserve existing value unless intentionally changing audio. Pass null to clear."),
+  photo: photoSchema,
   visited: z.boolean().optional().describe("Whether the stop has been visited. Pass true/false to mark/unmark."),
 });

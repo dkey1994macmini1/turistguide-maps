@@ -5,12 +5,14 @@ import { AppLayer } from "@/composition-root";
 import { validateSlug } from "@/core/validation";
 import { serializePlan } from "../serializers";
 
-// GET /api/plans — list all plans
-export async function GET() {
+// GET /api/plans — list active plans; ?archived=true lists archived plans
+export async function GET(request: Request) {
+  const archived = new URL(request.url).searchParams.get("archived") === "true";
+
   const result = await Effect.runPromiseExit(
     Effect.gen(function* () {
       const repo = yield* PlanRepositoryPort;
-      return yield* repo.listPlans;
+      return yield* repo.listPlans({ archived });
     }).pipe(Effect.provide(AppLayer))
   );
 

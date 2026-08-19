@@ -104,5 +104,20 @@ describe("ReadModel Contract", () => {
       expect(result[0].slug).toBe("paris");
       expect(result[1].slug).toBe("tokyo");
     });
+
+    it("should omit archived plans from listed slugs", async () => {
+      const TestLayer = makeTestLayer();
+      const result = await Effect.runPromise(
+        Effect.gen(function* (_) {
+          const planRepo = yield* PlanRepositoryPort;
+          const readModel = yield* ReadModelPort;
+          yield* planRepo.createPlan({ slug: "paris", title: "Paris Trip", description: "" });
+          const tokyo = yield* planRepo.createPlan({ slug: "tokyo", title: "Tokyo Trip", description: "" });
+          yield* planRepo.updatePlan(tokyo.id, { archivedAt: new Date() });
+          return yield* readModel.listPlanSlugs;
+        }).pipe(Effect.provide(TestLayer))
+      );
+      expect(result.map((p) => p.slug)).toEqual(["paris"]);
+    });
   });
 });

@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Turistguide Maps — Redesign Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --olive: #293b2e;
+  --olive-light: #3d5a45;
+  --cream: #faf9f7;
+  --white: #ffffff;
+  --gold: #c9a96e;
+  --gold-light: #e8d5a3;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b6b;
+  --text-muted: #9a9a9a;
+  --border: #e8e6e1;
+  --border-light: #f0ede8;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--text-primary); background: var(--cream); -webkit-font-smoothing: antialiased; }
+body { min-height: 100dvh; }
+
+/* ═══ Header ═══ */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+}
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.back-btn svg { width: 18px; height: 18px; }
+.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.icon-btn {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.icon-btn:hover { background: var(--olive); color: var(--white); border-color: var(--olive); }
+.icon-btn svg { width: 18px; height: 18px; }
+
+.plan-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--olive);
+  margin-top: 6px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.plan-meta {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.photo-guide-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--olive);
+  text-decoration: none;
+}
+.photo-guide-link:hover { text-decoration: underline; }
+.photo-guide-link svg { width: 14px; height: 14px; }
+
+/* ═══ Day Switcher ═══ */
+.day-switcher {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 1px);
+  z-index: 90;
+  background: var(--cream);
+  border-bottom: 1px solid var(--border-light);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.day-switcher::-webkit-scrollbar { display: none; }
+.day-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  min-width: min-content;
+}
+.day-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.day-tab:hover { border-color: var(--olive); color: var(--olive); }
+.day-tab.active {
+  background: var(--olive);
+  color: var(--white);
+  border-color: var(--olive);
+  box-shadow: var(--shadow-sm);
+}
+.day-tab .day-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.day-tab.active .day-num { background: rgba(255,255,255,0.25); }
+.day-tab .stop-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.day-tab.active .stop-count { color: rgba(255,255,255,0.75); }
+.day-tab.past { opacity: 0.55; }
+
+/* ═══ Stop Cards ═══ */
+.stops-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.stop-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+.stop-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.stop-card:active { transform: translateY(0) scale(0.995); }
+
+.stop-card-photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--border-light);
+}
+.stop-card-photo img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.stop-card:hover .stop-card-photo img { transform: scale(1.03); }
+
+.stop-card-photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(41,59,46,0.5), transparent 60%);
+}
+
+.stop-order-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--olive);
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+.stop-card-content {
+  padding: 16px;
+}
+.stop-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.stop-card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+.stop-card-summary {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin-top: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.visited-toggle {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--white);
+}
+.visited-toggle:hover { border-color: var(--olive); }
+.visited-toggle.visited {
+  background: var(--olive);
+  border-color: var(--olive);
+  color: var(--white);
+}
+.visited-toggle svg { width: 14px; height: 14px; }
+
+/* visited card dim */
+.stop-card.visited .stop-card-photo { opacity: 0.7; }
+.stop-card.visited .stop-card-title { color: var(--text-secondary); text-decoration: line-through; text-decoration-color: var(--text-muted); }
+.stop-card.visited .stop-card-summary { color: var(--text-muted); }
+
+/* ═══ Bottom Sheet Detail ═══ */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.sheet-overlay.open { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 210;
+  background: var(--white);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  max-height: 88dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.sheet.open { transform: translateY(0); }
+
+.sheet-handle {
+  width: 40px; height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin: 12px auto;
+  flex-shrink: 0;
+}
+
+.sheet-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+.sheet-hero img { width: 100%; height: 100%; object-fit: cover; }
+.sheet-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(41,59,46,0.6), transparent 50%);
+}
+.sheet-hero-text {
+  position: absolute;
+  bottom: 16px; left: 16px; right: 16px;
+  color: var(--white);
+}
+.sheet-hero-text h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.sheet-hero-text .sheet-summary {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.sheet-body { padding: 20px 16px; }
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+}
+.meta-item svg { width: 16px; height: 16px; color: var(--olive); flex-shrink: 0; }
+.meta-item .meta-label { color: var(--text-muted); font-size: 0.7rem; }
+.meta-item .meta-value { color: var(--text-primary); font-weight: 500; }
+
+/* Audio */
+.audio-section {
+  margin-bottom: 20px;
+  padding: 14px;
+  background: var(--cream);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+.audio-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.audio-play-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--olive);
+  color: var(--white);
+  border: none;
+  display: grid; place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+.audio-play-btn:active { transform: scale(0.95); }
+.audio-play-btn svg { width: 18px; height: 18px; }
+.audio-waveform {
+  flex: 1;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.wave-bar {
+  flex: 1;
+  background: var(--border);
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+.wave-bar:nth-child(3n) { height: 60%; }
+.wave-bar:nth-child(3n+1) { height: 40%; }
+.wave-bar:nth-child(3n+2) { height: 80%; }
+.audio-section:hover .wave-bar { background: var(--gold-light); }
+.audio-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Description */
+.sheet-description {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+.sheet-description.collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.read-more-btn {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--olive);
+  cursor: pointer;
+  background: none; border: none; padding: 0;
+}
+.read-more-btn:hover { text-decoration: underline; }
+
+/* Links */
+.sheet-links {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sheet-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--cream);
+  color: var(--olive);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.sheet-link:hover { background: var(--border-light); }
+.sheet-link svg { width: 16px; height: 16px; }
+
+.sheet-close {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  color: var(--white);
+  border: none;
+  display: grid; place-items: center;
+  cursor: pointer;
+  z-index: 5;
+}
+.sheet-close svg { width: 18px; height: 18px; }
+
+/* ═══ Floating Map Button ═══ */
+.fab-map {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  right: 16px;
+  z-index: 150;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--olive);
+  color: var(--white);
+  border: none;
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fab-map:hover { transform: scale(1.05); box-shadow: var(--shadow-lg); }
+.fab-map:active { transform: scale(0.95); }
+.fab-map svg { width: 22px; height: 22px; }
+
+/* ═══ Map Modal ═══ */
+.map-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: var(--white);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+.map-modal.open { transform: translateY(0); }
+.map-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--white);
+}
+.map-modal-header h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.map-placeholder {
+  flex: 1;
+  background: #e8f0e5;
+  display: grid; place-items: center;
+  position: relative;
+}
+.map-placeholder-text {
+  color: var(--olive);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+}
+.map-dots {
+  position: absolute;
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 80px;
+}
+.map-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--olive);
+  color: var(--white);
+  display: grid; place-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 3px solid var(--white);
+  box-shadow: var(--shadow-md);
+}
+.map-dot:nth-child(2) { background: var(--gold); }
+
+/* ═══ Animations ═══ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stop-card { animation: fadeUp 0.4s ease forwards; }
+.stop-card:nth-child(1) { animation-delay: 0.05s; }
+.stop-card:nth-child(2) { animation-delay: 0.1s; }
+.stop-card:nth-child(3) { animation-delay: 0.15s; }
+.stop-card:nth-child(4) { animation-delay: 0.2s; }
+.stop-card:nth-child(5) { animation-delay: 0.25s; }
+
+/* ═══ Desktop overrides ═══ */
+@media (min-width: 768px) {
+  .app-header { padding: 16px 24px; }
+  .plan-title { font-size: 1.8rem; }
+  .day-tabs { padding: 14px 24px; }
+  .stops-container {
+    padding: 24px;
+    max-width: 640px;
+    gap: 24px;
+  }
+  .stop-card { display: grid; grid-template-columns: 240px 1fr; }
+  .stop-card-photo { aspect-ratio: auto; height: 100%; border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+  .stop-card-content { display: flex; flex-direction: column; justify-content: center; padding: 20px; }
+  .sheet { max-width: 480px; left: 50%; right: auto; transform: translate(-50%, 100%); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+  .sheet.open { transform: translate(-50%, 0); }
+}
+
+@media (min-width: 1024px) {
+  .stops-container { max-width: 720px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ Header ═══ -->
+<header class="app-header">
+  <div class="header-row">
+    <a href="/" class="back-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Plany
+    </a>
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Offline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+      </button>
+      <button class="icon-btn" aria-label="Ustawienia">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+  <h1 class="plan-title">Toskania Sierpien 2026</h1>
+  <p class="plan-meta">5 dni / 4 noce, 5 osob, Bolonia → Chianti → Siena → Val d'Orcia → Bolonia</p>
+  <a href="/artifacts/tuscany-family-august-2026" class="photo-guide-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    Otworz foto-przewodnik
+  </a>
+</header>
+
+<!-- ═══ Day Switcher ═══ -->
+<div class="day-switcher">
+  <div class="day-tabs" role="tablist">
+    <button class="day-tab active" role="tab" aria-selected="true">
+      <span class="day-num">D1</span>
+      <span>Bolonia</span>
+      <span class="stop-count">5</span>
+    </button>
+    <button class="day-tab" role="tab" aria-selected="false">
+      <span class="day-num">D2</span>
+      <span>Greve i okolice</span>
+      <span class="stop-count">4</span>
+    </button>
+    <button class="day-tab" role="tab" aria-selected="false">
+      <span class="day-num">D3</span>
+      <span>Siena</span>
+      <span class="stop-count">3</span>
+    </button>
+    <button class="day-tab" role="tab" aria-selected="false">
+      <span class="day-num">D4</span>
+      <span>Val d'Orcia</span>
+      <span class="stop-count">4</span>
+    </button>
+    <button class="day-tab past" role="tab" aria-selected="false">
+      <span class="day-num">D5</span>
+      <span>Powrot</span>
+      <span class="stop-count">2</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══ Stops List ═══ -->
+<div class="stops-container" id="stopsContainer">
+  <!-- Cards injected by JS -->
+</div>
+
+<!-- ═══ Bottom Sheet ═══ -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="detailSheet">
+  <button class="sheet-close" onclick="closeSheet()" aria-label="Zamknij">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div id="sheetContent"></div>
+</div>
+
+<!-- ═══ Map Modal ═══ -->
+<div class="map-modal" id="mapModal">
+  <div class="map-modal-header">
+    <h3>Mapa trasy</h3>
+    <button class="icon-btn" onclick="toggleMap()" aria-label="Zamknij">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="map-placeholder">
+    <div class="map-dots">
+      <div class="map-dot">1</div>
+      <div class="map-dot">2</div>
+      <div class="map-dot">3</div>
+    </div>
+    <div class="map-placeholder-text">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--olive)" stroke-width="1.5" style="margin:0 auto 8px;display:block;opacity:0.4;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Tu pojawi sie mapa Leaflet
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Floating Map Button ═══ -->
+<button class="fab-map" onclick="toggleMap()" aria-label="Pokaz mape">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+</button>
+
+<script>
+// ═══ Demo Data ═══
+const stops = [
+  {
+    id: 's1',
+    order: 1,
+    title: 'Bolonia Airport — ladowanie, auto i szybkie sniadanie',
+    summary: 'Lotnisko Bolonia Guglielmo Marconi, nazwane po pionierze radia. Zwiarte ladowanie i odbior auta.',
+    photo: 'https://images.unsplash.com/photo-1529264978834-666a0e99f5ed?w=800&q=80',
+    duration: { min: 60, max: 90 },
+    cost: { amount: '0', currency: 'EUR', note: 'Parking P2, pierwsza godzina' },
+    reservation: null,
+    bring: ['Paszport', 'Prawo jazdy', 'Karta kredytowa'],
+    bestTime: 'Rano, przed 9:00',
+    warnings: ['Dlugi spacer z bramki do wypozyczalni'],
+    description: 'Lotnisko Bolonia Guglielmo Marconi to niewielkie, ale nowoczesne lotnisko polozone zaledwie 6 km od centrum miasta. Nazwane na czesc Guglielmo Marconiego, wynalazcy radia, ktory urodzil sie w Bolonii. Po ladowaniu kierujemy sie do strefy odbioru bagazu, a nastepnie do hali przylotow, gdzie znajduja sie wypozyczalnie samochodow. Proces odbioru auta zajmuje zazwyczaj 15-20 minut. Parking P2 oferuje pierwsza godzine bezplatnie, co jest wystarczajace na zaladowanie bagazy i sprawdzenie auta. Przed wyjazdem warto zrobic szybkie zdjecia dokumentacyjne pojazdu.',
+    links: [{ label: 'Google Maps', url: '#' }],
+    visited: false,
+  },
+  {
+    id: 's2',
+    order: 2,
+    title: 'InPost Locker ITGRE027057F — odbior paczki',
+    summary: 'Zewnetrzny paczkomat InPost przy SR 222, otoczony cyprysami i winnicami. Szybki odbior przesylki przed wjazdem na Chianti.',
+    photo: 'https://images.unsplash.com/photo-1508921912186-1d1a45a40a42?w=800&q=80',
+    duration: { min: 5, max: 10 },
+    cost: null,
+    reservation: null,
+    bring: ['Kod odbioru'],
+    bestTime: 'Dowolna',
+    warnings: [],
+    description: 'Paczkomat InPost zlokalizowany przy drodze SR 222, otoczony charakterystycznymi dla Toskanii cyprysami i winnicami. To szybki przystanek przed wjazdem w region Chianti. Kod odbioru otrzymasz SMS-em. Parking przy paczkomacie jest nieformalny — po prostu zatrzymaj sie na poboczu.',
+    links: [{ label: 'Google Maps', url: '#' }],
+    visited: true,
+  },
+  {
+    id: 's3',
+    order: 3,
+    title: 'Bottega a CAMPANA — lunch w Panzano',
+    summary: 'Cicha restauracja w Panzano, wsi slynacej z Dario Cecchiniego. Zamow makaron al ragu i lampke Chianti.',
+    photo: 'https://images.unsplash.com/photo-1559329007-40df51a5905c?w=800&q=80',
+    duration: { min: 60, max: 90 },
+    cost: { amount: '35-50', currency: 'EUR', note: 'osoba, z winem' },
+    reservation: 'Rekomendowana rezerwacja na weekendy',
+    bring: [],
+    bestTime: '12:30-13:30',
+    warnings: ['Ograniczona liczba miejsc'],
+    description: 'Panzano to mala winiarska wioska w sercu Chianti, znana przede wszystkim z Dario Cecchiniego, legendarnego rzeznika i restauratora. Bottega a CAMPANA to bardziej kameralna alternatywa wobec jego glownej restauracji. Menu opiera sie na sezonowych, lokalnych produktach: domowy makaron al ragu, grillowane warzywa, i oczywiscie lokalne Chianti Classico. Atmosfera jest niespieszna i rodzinna.',
+    links: [{ label: 'Google Maps', url: '#' }],
+    visited: false,
+  },
+  {
+    id: 's4',
+    order: 4,
+    title: 'Fattoria Poggerino — check-in, basen i reset',
+    summary: 'Rodzinna farma i winnica miedzy Radda a Gaiole. Oliwki, winnice, basen z widokiem.',
+    photo: 'https://images.unsplash.com/photo-1514890547357-a9ee288728e0?w=800&q=80',
+    duration: { min: 0, max: 0 },
+    cost: { amount: '180', currency: 'EUR', note: 'noc, apartament 4-osobowy' },
+    reservation: 'Zarezerwowane: 22-24.08',
+    bring: ['Strój kapielowy', 'Klapki'],
+    bestTime: 'Check-in od 15:00',
+    warnings: [],
+    description: 'Fattoria Poggerino to rodzinna agroturystyka prowadzona przez rodzine Pieraccini od pokolen. Zlokalizowana miedzy Radda in Chianti a Gaiole, oferuje przepiekne widoki na winnice i oliwki. Apartamenty sa urzadzone w rustykalnym stylu z nowoczesnymi udogodnieniami. Basen z widokiem na doliny to idealne miejsce na pierwszy wieczorowy reset po podrozy. Gospodarze oferuja tez degustacje wlasnych win.',
+    links: [{ label: 'Google Maps', url: '#' }],
+    visited: false,
+  },
+  {
+    id: 's5',
+    order: 5,
+    title: 'Pizza Hot — kolacja w Radda',
+    summary: 'Pizzeria w Raddzie z piecem opalanym drewnem. Cieply zapach, rodzinna atmosfera, dobre ceny.',
+    photo: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800&q=80',
+    duration: { min: 45, max: 60 },
+    cost: { amount: '15-25', currency: 'EUR', note: 'osoba' },
+    reservation: null,
+    bring: [],
+    bestTime: '19:00-20:00',
+    warnings: ['W weekendy dlugie kolejki'],
+    description: 'Pizza Hot to niewielka, rodzinna pizzeria w centrum Radda in Chianti. Charakteryzuje ja piec opalany drewnem, ktory nadaje pizzy charakterystyczny, lekko wędzony smak. Menu jest klasyczne: Margherita, Marinara, Quattro Formaggi, Capricciosa. Lokalne Chianti Classico w karafce za 12 EUR. Atmosfera jest bardzo rodzinna i nieformalna. Po calym dniu podrozy to idealne miejsce na luzna kolacje.',
+    links: [{ label: 'Google Maps', url: '#' }],
+    visited: false,
+  },
+];
+
+// ═══ Render Stops ═══
+const container = document.getElementById('stopsContainer');
+
+function renderStops() {
+  container.innerHTML = stops.map(stop => `
+    <article class="stop-card ${stop.visited ? 'visited' : ''}" data-id="${stop.id}">
+      <div class="stop-card-photo">
+        <img src="${stop.photo}" alt="${stop.title}" loading="lazy">
+        <div class="stop-card-photo-overlay"></div>
+        <span class="stop-order-badge">${stop.order}</span>
+      </div>
+      <div class="stop-card-content">
+        <div class="stop-card-header">
+          <div>
+            <h3 class="stop-card-title">${stop.title}</h3>
+            <p class="stop-card-summary">${stop.summary}</p>
+          </div>
+          <button class="visited-toggle ${stop.visited ? 'visited' : ''}" onclick="toggleVisited('${stop.id}', event)" aria-label="${stop.visited ? 'Odznacz' : 'Zaznacz jako odwiedzone'}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+
+  // Attach tap handlers
+  document.querySelectorAll('.stop-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.visited-toggle')) return;
+      openSheet(card.dataset.id);
+    });
+  });
+}
+
+function toggleVisited(id, event) {
+  event.stopPropagation();
+  const stop = stops.find(s => s.id === id);
+  if (stop) {
+    stop.visited = !stop.visited;
+    renderStops();
+  }
+}
+
+// ═══ Bottom Sheet ═══
+const sheetOverlay = document.getElementById('sheetOverlay');
+const detailSheet = document.getElementById('detailSheet');
+const sheetContent = document.getElementById('sheetContent');
+
+function openSheet(stopId) {
+  const stop = stops.find(s => s.id === stopId);
+  if (!stop) return;
+
+  sheetContent.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-hero">
+      <img src="${stop.photo}" alt="${stop.title}">
+      <div class="sheet-hero-overlay"></div>
+      <div class="sheet-hero-text">
+        <h2>${stop.title}</h2>
+        <p class="sheet-summary">${stop.summary}</p>
+      </div>
+    </div>
+    <div class="sheet-body">
+      ${renderMetadata(stop)}
+      ${renderAudio()}
+      <div class="sheet-description-wrapper">
+        <div class="sheet-description collapsed" id="desc-${stop.id}">${stop.description}</div>
+        <button class="read-more-btn" onclick="toggleDesc('${stop.id}')">Czytaj wiecej</button>
+      </div>
+      <div class="sheet-links">
+        ${stop.links.map(l => `
+          <a href="${l.url}" class="sheet-link" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${l.label}
+          </a>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  sheetOverlay.classList.add('open');
+  detailSheet.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function renderMetadata(stop) {
+  const items = [];
+  if (stop.duration && stop.duration.max > 0) items.push({
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    label: 'Czas', value: `${stop.duration.min}-${stop.duration.max} min`
+  });
+  if (stop.cost) items.push({
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+    label: 'Koszt', value: `${stop.cost.amount} ${stop.cost.currency}${stop.cost.note ? ' · ' + stop.cost.note : ''}`
+  });
+  if (stop.reservation) items.push({
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    label: 'Rezerwacja', value: stop.reservation
+  });
+  if (stop.bring.length > 0) items.push({
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>',
+    label: 'Zabierz', value: stop.bring.join(', ')
+  });
+  if (items.length === 0) return '';
+  return `<div class="metadata-grid">${items.map(i => `
+    <div class="meta-item">
+      ${i.icon}
+      <div>
+        <div class="meta-label">${i.label}</div>
+        <div class="meta-value">${i.value}</div>
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
+function renderAudio() {
+  return `
+    <div class="audio-section">
+      <div class="audio-player">
+        <button class="audio-play-btn" aria-label="Odtwarzaj">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+        <div class="audio-waveform">
+          ${Array.from({length: 24}, () => '<div class="wave-bar"></div>').join('')}
+        </div>
+        <span class="audio-time">2:34</span>
+      </div>
+    </div>
+  `;
+}
+
+function toggleDesc(id) {
+  const el = document.getElementById('desc-' + id);
+  const btn = el.nextElementSibling;
+  if (el.classList.contains('collapsed')) {
+    el.classList.remove('collapsed');
+    btn.textContent = 'Zwin';
+  } else {
+    el.classList.add('collapsed');
+    btn.textContent = 'Czytaj wiecej';
+  }
+}
+
+function closeSheet() {
+  sheetOverlay.classList.remove('open');
+  detailSheet.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ═══ Map Modal ═══
+const mapModal = document.getElementById('mapModal');
+function toggleMap() {
+  mapModal.classList.toggle('open');
+  if (mapModal.classList.contains('open')) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+}
+
+// ═══ Init ═══
+renderStops();
+</script>
+
+</body>
+</html>

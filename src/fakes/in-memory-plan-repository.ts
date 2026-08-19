@@ -13,7 +13,7 @@ const makeFakePlanRepository = (): PlanRepository => {
         const id = PlanId(`plan-${crypto.randomUUID()}`);
         const slug = Slug(input.slug);
         const now = new Date();
-        const plan: Plan = { id, slug, title: input.title, description: input.description, startDate: input.startDate ?? null, createdAt: now, updatedAt: now };
+        const plan: Plan = { id, slug, title: input.title, description: input.description, startDate: input.startDate ?? null, archivedAt: null, createdAt: now, updatedAt: now };
         store.set(plan.id, plan);
         return plan;
       }) as Effect.Effect<Plan, RepositoryError>,
@@ -33,9 +33,13 @@ const makeFakePlanRepository = (): PlanRepository => {
         return yield* Effect.fail(RepositoryError.notFound(slug));
       }) as Effect.Effect<Plan, RepositoryError>,
 
-    listPlans: Effect.gen(function* () {
-      return Array.from(store.values()).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-    }) as Effect.Effect<Plan[], RepositoryError>,
+    listPlans: (filter) =>
+      Effect.gen(function* () {
+        const archived = filter?.archived === true;
+        return Array.from(store.values())
+          .filter((plan) => (plan.archivedAt !== null) === archived)
+          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      }) as Effect.Effect<Plan[], RepositoryError>,
 
     updatePlan: (id: string, input: PlanUpdateInput) =>
       Effect.gen(function* () {
@@ -47,6 +51,7 @@ const makeFakePlanRepository = (): PlanRepository => {
           ...(input.title !== undefined && { title: input.title }),
           ...(input.description !== undefined && { description: input.description }),
           ...(input.startDate !== undefined && { startDate: input.startDate }),
+          ...(input.archivedAt !== undefined && { archivedAt: input.archivedAt }),
           updatedAt: new Date(),
         };
         store.set(id, updated);

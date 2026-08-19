@@ -63,6 +63,7 @@ function makePlan(slug: string): PlanReadModel {
             warnings: [],
             alternative: null,
             audioUrl: null,
+            photo: null,
           },
         ],
       },

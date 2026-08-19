@@ -6,7 +6,7 @@ import { RepositoryError } from "../../core/errors";
 import { PlanId, Slug } from "../../core/branded";
 import type { PlanCreateInput, PlanUpdateInput } from "../../core/plan";
 import { plans, type PlanDAO, type PlanInsertDAO } from "@/common/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNotNull, isNull } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
 import { toPlan } from "./mappers";
 
@@ -23,6 +23,7 @@ const makePostgresPlanRepository = (db: DbClient): PlanRepository => ({
           title: input.title,
           description: input.description,
           startDate: input.startDate ?? null,
+          archivedAt: null,
           createdAt: now,
           updatedAt: now,
         };
@@ -60,10 +61,15 @@ const makePostgresPlanRepository = (db: DbClient): PlanRepository => ({
       },
     }),
 
-  listPlans:
+  listPlans: (filter) =>
     Effect.tryPromise({
       try: async () => {
-        const rows = await db.select().from(plans).orderBy(plans.createdAt);
+        const archived = filter?.archived === true;
+        const rows = await db
+          .select()
+          .from(plans)
+          .where(archived ? isNotNull(plans.archivedAt) : isNull(plans.archivedAt))
+          .orderBy(plans.createdAt);
         return rows.map(toPlan);
       },
       catch: (error): RepositoryError => RepositoryError.from(error),
@@ -77,6 +83,7 @@ const makePostgresPlanRepository = (db: DbClient): PlanRepository => ({
           ...(input.title !== undefined && { title: input.title }),
           ...(input.description !== undefined && { description: input.description }),
           ...(input.startDate !== undefined && { startDate: input.startDate }),
+          ...(input.archivedAt !== undefined && { archivedAt: input.archivedAt }),
           updatedAt: new Date(),
         };
         const [row] = await db.update(plans).set(updateData).where(eq(plans.id, id)).returning();

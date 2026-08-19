@@ -7,7 +7,7 @@ import { ReadModelPort } from "@/core/ports/read-model-port";
 import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
 import { googleMapsUrl } from "@/core/ports/read-model-port";
 import { runEffect, errResult, okResult } from "../helpers";
-import { linkSchema, durationSchema, costSchema } from "../schemas";
+import { linkSchema, durationSchema, costSchema, photoSchema } from "../schemas";
 
 export function registerAddStop(server: McpServer): void {
   server.registerTool(
@@ -51,10 +51,11 @@ export function registerAddStop(server: McpServer): void {
         warnings: z.array(z.string()).optional().default([]).describe("Warnings, e.g. ['Steep climb', 'No shade']"),
         alternative: z.string().optional().describe("Alternative if this stop doesn't work out"),
         audioUrl: z.string().nullable().optional().describe("Audio file URL (e.g. /api/audio/stops/stop-id). Preserve existing value unless intentionally changing audio. Pass null to clear."),
+        photo: photoSchema,
         visited: z.boolean().optional().describe("Whether the stop has been visited."),
       },
     },
-    async ({ planSlug, dayNumber, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl, visited }) => {
+    async ({ planSlug, dayNumber, title, summary, description, lat, lng, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl, photo, visited }) => {
       try {
         const stop = await runEffect(
           Effect.gen(function* () {
@@ -83,6 +84,7 @@ export function registerAddStop(server: McpServer): void {
               warnings: warnings ?? [],
               alternative: alternative ?? null,
               audioUrl: audioUrl ?? null,
+              photo: photo ?? null,
               visited: visited ?? false,
             });
             return { ...newStop, googleMapsUrl: googleMapsUrl(lat, lng) };

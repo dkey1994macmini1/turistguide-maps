@@ -10,6 +10,8 @@ interface SettingsMenuProps {
   slug: string;
   startDate: string | null;
   onStartDateChange: (date: string | null) => void;
+  archived: boolean;
+  onArchiveToggle: (archived: boolean) => void;
 }
 
 export function SettingsMenu({
@@ -20,6 +22,8 @@ export function SettingsMenu({
   slug,
   startDate,
   onStartDateChange,
+  archived,
+  onArchiveToggle,
 }: SettingsMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -86,6 +90,16 @@ export function SettingsMenu({
               className="settings-date-input"
             />
           </div>
+          <hr className="settings-menu-divider" />
+          <button
+            className="settings-menu-action"
+            onClick={() => {
+              setOpen(false);
+              onArchiveToggle(!archived);
+            }}
+          >
+            {archived ? "Przywróć z archiwum" : "Archiwizuj plan"}
+          </button>
         </div>
       )}
     </div>

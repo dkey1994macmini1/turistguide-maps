@@ -6,6 +6,7 @@ export type PlanListItem = {
   title: string;
   description: string;
   startDate: string | null;
+  archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -37,6 +38,12 @@ export type StopItem = {
   warnings: ReadonlyArray<string>;
   alternative: string | null;
   audioUrl: string | null;
+  photo: {
+    src: string;
+    alt: string;
+    photographer: string;
+    photoUrl?: string;
+  } | null;
   visited: boolean;
 };
 

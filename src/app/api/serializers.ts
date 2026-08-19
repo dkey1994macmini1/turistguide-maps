@@ -8,6 +8,7 @@ export function serializePlan(p: Plan) {
     title: p.title,
     description: p.description,
     startDate: p.startDate ? p.startDate.toISOString().split("T")[0] : null,
+    archivedAt: p.archivedAt ? p.archivedAt.toISOString() : null,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
   };
@@ -41,6 +42,7 @@ export function serializeReadModel(plan: PlanReadModel) {
         warnings: stop.warnings ?? [],
         alternative: stop.alternative ?? null,
         audioUrl: stop.audioUrl ?? null,
+        photo: stop.photo ?? null,
         visited: stop.visited ?? false,
       })),
     })),

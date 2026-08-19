@@ -59,7 +59,7 @@ export async function DELETE(
   return NextResponse.json({ deleted: true });
 }
 
-// PATCH /api/plans/[slug] — update plan fields (startDate, title, description)
+// PATCH /api/plans/[slug] — update plan fields (startDate, title, description, archived)
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
@@ -84,9 +84,14 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { startDate, title, description } = body as Record<string, unknown>;
+  const { startDate, title, description, archived } = body as Record<string, unknown>;
 
-  const updateData: { startDate?: Date | null; title?: string; description?: string } = {};
+  const updateData: {
+    startDate?: Date | null;
+    title?: string;
+    description?: string;
+    archivedAt?: Date | null;
+  } = {};
 
   if (startDate !== undefined) {
     if (startDate === null) {
@@ -114,6 +119,13 @@ export async function PATCH(
       return NextResponse.json({ error: "description must be a string" }, { status: 400 });
     }
     updateData.description = description;
+  }
+
+  if (archived !== undefined) {
+    if (typeof archived !== "boolean") {
+      return NextResponse.json({ error: "archived must be a boolean" }, { status: 400 });
+    }
+    updateData.archivedAt = archived ? new Date() : null;
   }
 
   if (Object.keys(updateData).length === 0) {

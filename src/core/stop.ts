@@ -2,7 +2,7 @@
 
 import type { StopId, DayId } from "./branded";
 import type { StopLink } from "./stop-link";
-import type { DurationRange, CostInfo } from "./stop-types";
+import type { DurationRange, CostInfo, StopPhoto } from "./stop-types";
 
 export type Stop = {
   readonly id: StopId;
@@ -23,6 +23,7 @@ export type Stop = {
   readonly warnings: ReadonlyArray<string>;
   readonly alternative: string | null;
   readonly audioUrl: string | null;
+  readonly photo: StopPhoto | null;
   readonly visited: boolean;
 
 };
@@ -44,6 +45,7 @@ export type StopCreateInput = {
   readonly warnings?: ReadonlyArray<string>;
   readonly alternative?: string | null;
   readonly audioUrl?: string | null;
+  readonly photo?: StopPhoto | null;
   readonly visited?: boolean;
 };
 
@@ -63,5 +65,6 @@ export type StopUpdateInput = {
   readonly warnings?: ReadonlyArray<string>;
   readonly alternative?: string | null;
   readonly audioUrl?: string | null;
+  readonly photo?: StopPhoto | null;
   readonly visited?: boolean;
 };

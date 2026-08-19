@@ -8,4 +8,5 @@ export const plans = pgTable("plans", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   startDate: timestamp("start_date", { withTimezone: true }),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
 });

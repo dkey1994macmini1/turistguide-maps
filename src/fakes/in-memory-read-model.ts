@@ -22,7 +22,7 @@ const makeInMemoryReadModel = (
   stopRepo: typeof StopRepositoryPort.Service,
 ): ReadModel => ({
   listPlanSlugs: Effect.gen(function* () {
-    const plans = yield* planRepo.listPlans;
+    const plans = yield* planRepo.listPlans();
     return plans.map((p) => ({ slug: p.slug, title: p.title }));
   }) as Effect.Effect<Array<{ slug: string; title: string }>, RepositoryError>,
 

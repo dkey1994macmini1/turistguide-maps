@@ -10,7 +10,7 @@ export function registerListItineraries(server: McpServer): void {
     "list_itineraries",
     {
       title: "List Itineraries",
-      description: "List all available travel itineraries. Returns slug and title for each plan.",
+      description: "List active (non-archived) travel itineraries. Returns slug and title for each plan.",
       inputSchema: {},
     },
     async () => {

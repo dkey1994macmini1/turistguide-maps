@@ -5,7 +5,7 @@ import { Effect, Layer } from "effect";
 import { ReadModelPort, type ReadModel, type PlanReadModel, type StopReadModel, googleMapsUrl } from "../../core/ports/read-model-port";
 import { RepositoryError } from "../../core/errors";
 import { plans, days, stops } from "@/common/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, isNull } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
 import { toStop, toDay, toPlan } from "./mappers";
 import type { Stop } from "../../core/stop";
@@ -35,7 +35,10 @@ const buildReadModel = (
 const makePostgresReadModel = (db: DbClient): ReadModel => ({
   listPlanSlugs: Effect.tryPromise({
     try: async () => {
-      const rows = await db.select({ slug: plans.slug, title: plans.title }).from(plans);
+      const rows = await db
+        .select({ slug: plans.slug, title: plans.title })
+        .from(plans)
+        .where(isNull(plans.archivedAt));
       return rows;
     },
     catch: (error): RepositoryError => RepositoryError.from(error),

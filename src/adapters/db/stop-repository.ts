@@ -5,7 +5,7 @@ import { StopRepositoryPort, type StopRepository } from "../../core/ports/stop-r
 import { RepositoryError } from "../../core/errors";
 import { StopId, DayId } from "../../core/branded";
 import type { StopCreateInput, StopUpdateInput } from "../../core/stop";
-import type { DurationRange, CostInfo } from "../../core/stop-types";
+import type { DurationRange, CostInfo, StopPhoto } from "../../core/stop-types";
 import { stops, type StopDAO, type StopInsertDAO } from "@/common/db/schema";
 import { eq } from "drizzle-orm";
 import { DbClientLive, type DbClient } from "./client";
@@ -34,6 +34,7 @@ const makePostgresStopRepository = (db: DbClient): StopRepository => ({
           warnings: input.warnings ?? [],
           alternative: input.alternative ?? null,
           audioUrl: input.audioUrl ?? null,
+          photo: input.photo ?? null,
           visited: input.visited ?? false,
         };
         const [row] = await db.insert(stops).values(insertData).returning();
@@ -84,6 +85,7 @@ const makePostgresStopRepository = (db: DbClient): StopRepository => ({
           ...(input.warnings !== undefined && { warnings: [...(input.warnings ?? [])] }),
           ...(input.alternative !== undefined && { alternative: input.alternative as string | null }),
           ...(input.audioUrl !== undefined && { audioUrl: input.audioUrl as string | null }),
+          ...(input.photo !== undefined && { photo: input.photo as StopPhoto | null }),
           ...(input.visited !== undefined && { visited: input.visited }),
         };
         const [row] = await db.update(stops).set(updateData).where(eq(stops.id, id)).returning();

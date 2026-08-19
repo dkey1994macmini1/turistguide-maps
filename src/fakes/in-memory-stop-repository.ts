@@ -29,6 +29,7 @@ const makeFakeStopRepository = (): StopRepository => {
           warnings: input.warnings ?? [],
           alternative: input.alternative ?? null,
           audioUrl: input.audioUrl ?? null,
+          photo: input.photo ?? null,
           visited: input.visited ?? false,
         };
         store.set(stop.id, stop);
@@ -68,6 +69,7 @@ const makeFakeStopRepository = (): StopRepository => {
           ...(input.warnings !== undefined && { warnings: input.warnings }),
           ...(input.alternative !== undefined && { alternative: input.alternative }),
           ...(input.audioUrl !== undefined && { audioUrl: input.audioUrl }),
+          ...(input.photo !== undefined && { photo: input.photo }),
           ...(input.visited !== undefined && { visited: input.visited }),
         };
         store.set(id, updated);

@@ -27,6 +27,7 @@ const baseStop: StopItem = {
   bestTime: "Early morning before 9 AM",
   warnings: ["No shade", "Steep stairs at summit"],
   alternative: "Koko Crater Trail for a harder workout",
+  photo: null,
 };
 
 describe("StopDetail", () => {
@@ -35,6 +36,43 @@ describe("StopDetail", () => {
 
     expect(screen.getByText("Diamond Head")).toBeInTheDocument();
     expect(screen.getByText("Iconic volcanic crater with panoramic views of Waikiki.")).toBeInTheDocument();
+  });
+
+  it("renders a locally hosted photo with Pexels attribution", () => {
+    const stopWithPhoto: StopItem = {
+      ...baseStop,
+      photo: {
+        src: "/images/stops/diamond-head.jpg",
+        alt: "Diamond Head seen from Waikiki",
+        photographer: "Jane Doe",
+        photoUrl: "https://www.pexels.com/photo/diamond-head-123/",
+      },
+    };
+    render(<StopDetail stop={stopWithPhoto} onClose={() => {}} slug="test-plan" />);
+
+    expect(screen.getByAltText("Diamond Head seen from Waikiki")).toBeInTheDocument();
+    const credit = screen.getByText("Jane Doe");
+    expect(credit).toHaveAttribute(
+      "href",
+      "https://www.pexels.com/photo/diamond-head-123/",
+    );
+    expect(screen.getByText(/on Pexels/)).toBeInTheDocument();
+  });
+
+  it("renders a user-provided photo without a Pexels credit", () => {
+    const stopWithPhoto: StopItem = {
+      ...baseStop,
+      photo: {
+        src: "/images/stops/diamond-head-user.jpg",
+        alt: "A meal shared at a local restaurant",
+        photographer: "Photo supplied by trip organizer",
+      },
+    };
+    render(<StopDetail stop={stopWithPhoto} onClose={() => {}} slug="test-plan" />);
+
+    expect(screen.getByAltText("A meal shared at a local restaurant")).toBeInTheDocument();
+    expect(screen.getByText(/Photo supplied by trip organizer/)).toBeInTheDocument();
+    expect(screen.queryByText(/on Pexels/)).not.toBeInTheDocument();
   });
 
   it("renders structured metadata", () => {

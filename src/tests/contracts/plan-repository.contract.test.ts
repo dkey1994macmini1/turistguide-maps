@@ -72,12 +72,46 @@ describe("PlanRepository Contract", () => {
           const repo = yield* PlanRepositoryPort;
           yield* repo.createPlan({ slug: "trip-1", title: "Trip 1", description: "First" });
           yield* repo.createPlan({ slug: "trip-2", title: "Trip 2", description: "Second" });
-          return yield* repo.listPlans;
+          return yield* repo.listPlans();
         }).pipe(Effect.provide(TestLayer))
       );
       expect(plans).toHaveLength(2);
       expect(plans.map((p) => p.slug)).toContain("trip-1");
       expect(plans.map((p) => p.slug)).toContain("trip-2");
+    });
+
+    it("should hide archived plans from the default list", async () => {
+      const TestLayer = makeInMemoryPlanRepositoryLayer();
+      const result = await Effect.runPromise(
+        Effect.gen(function* (_) {
+          const repo = yield* PlanRepositoryPort;
+          const active = yield* repo.createPlan({ slug: "active-trip", title: "Active", description: "" });
+          const archived = yield* repo.createPlan({ slug: "old-trip", title: "Old", description: "" });
+          yield* repo.updatePlan(archived.id, { archivedAt: new Date("2026-08-01T12:00:00Z") });
+          return {
+            active: yield* repo.listPlans(),
+            archived: yield* repo.listPlans({ archived: true }),
+          };
+        }).pipe(Effect.provide(TestLayer))
+      );
+      expect(result.active.map((p) => p.slug)).toEqual(["active-trip"]);
+      expect(result.archived.map((p) => p.slug)).toEqual(["old-trip"]);
+      expect(result.archived[0].archivedAt).toEqual(new Date("2026-08-01T12:00:00Z"));
+    });
+
+    it("should restore an archived plan to the active list", async () => {
+      const TestLayer = makeInMemoryPlanRepositoryLayer();
+      const plans = await Effect.runPromise(
+        Effect.gen(function* (_) {
+          const repo = yield* PlanRepositoryPort;
+          const created = yield* repo.createPlan({ slug: "restored-trip", title: "Restored", description: "" });
+          yield* repo.updatePlan(created.id, { archivedAt: new Date() });
+          yield* repo.updatePlan(created.id, { archivedAt: null });
+          return yield* repo.listPlans();
+        }).pipe(Effect.provide(TestLayer))
+      );
+      expect(plans.map((p) => p.slug)).toEqual(["restored-trip"]);
+      expect(plans[0].archivedAt).toBeNull();
     });
 
     it("should update a plan", async () => {
@@ -111,7 +145,7 @@ describe("PlanRepository Contract", () => {
             description: "Bye",
           });
           yield* repo.deletePlan(created.id);
-          const plans = yield* repo.listPlans;
+          const plans = yield* repo.listPlans();
           expect(plans.find((p) => p.id === created.id)).toBeUndefined();
         }).pipe(Effect.provide(TestLayer))
       );

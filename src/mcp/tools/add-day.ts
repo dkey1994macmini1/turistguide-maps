@@ -75,6 +75,7 @@ export function registerAddDay(server: McpServer): void {
                   warnings: s.warnings ?? [],
                   alternative: s.alternative ?? null,
                   audioUrl: s.audioUrl ?? undefined,
+                  photo: s.photo ?? null,
                   visited: s.visited ?? undefined,
                 });
                 createdStops.push(updated);
@@ -98,6 +99,7 @@ export function registerAddDay(server: McpServer): void {
                     warnings: s.warnings ?? [],
                     alternative: s.alternative ?? null,
                     audioUrl: s.audioUrl ?? null,
+                    photo: s.photo ?? null,
                   }),
                 );
               }
@@ -133,6 +135,7 @@ export function registerAddDay(server: McpServer): void {
                 warnings: s.warnings ?? [],
                 alternative: s.alternative ?? null,
                 audioUrl: s.audioUrl ?? null,
+                photo: s.photo ?? null,
               }),
             );
           }

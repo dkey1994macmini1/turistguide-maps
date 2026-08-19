@@ -79,6 +79,10 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
 
   const days = plan?.days ?? [];
   const activeDay: DayWithStops | null = days[activeDayIndex] ?? null;
+  const artifactUrl =
+    slug === "tuscany-family-august-2026"
+      ? "/artifacts/tuscany-family-august-2026/"
+      : null;
 
   const selectedStop: StopItem | null = useMemo(() => {
     if (!selectedStopId || !activeDay) return null;
@@ -224,6 +228,21 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
     }
   }
 
+  async function handleArchiveToggle(nextArchived: boolean) {
+    try {
+      const res = await fetch(`/api/plans/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ archived: nextArchived }),
+      });
+      if (res.ok) {
+        window.location.href = nextArchived ? "/plans/archived" : "/";
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   if (loading) {
     return (
       <div className="plan-viewer">
@@ -251,7 +270,9 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
     <div className="plan-viewer">
       <header className="plan-header">
         <div className="plan-header-row">
-          <a href="/" className="back-link">← Plans</a>
+          <a href={plan.archivedAt ? "/plans/archived" : "/"} className="back-link">
+            {plan.archivedAt ? "← Archiwalne plany" : "← Plans"}
+          </a>
           <div className="plan-header-actions">
             <OfflineBadge
               isOnline={isOnline}
@@ -266,12 +287,21 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
               slug={slug}
               startDate={plan.startDate}
               onStartDateChange={handleStartDateChange}
+              archived={plan.archivedAt !== null}
+              onArchiveToggle={handleArchiveToggle}
             />
           </div>
         </div>
         <h1>{plan.title}</h1>
-        {plan.description && (
-          <p className="plan-description">{plan.description}</p>
+        {(plan.description || artifactUrl) && (
+          <div className="plan-description">
+            {plan.description && <p>{plan.description}</p>}
+            {artifactUrl && (
+              <p>
+                <a href={artifactUrl}>Otwórz foto-przewodnik →</a>
+              </p>
+            )}
+          </div>
         )}
       </header>
 

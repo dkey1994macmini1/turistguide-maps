@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import type { StopItem } from "@/types/api";
 import { fetchAudioBlob, triggerFileDownload, shareAudioFile } from "@/lib/audio-download";
 
@@ -126,6 +127,31 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
       {/* Summary — quick scan intro */}
       {stop.summary && (
         <p className="stop-detail-summary">{stop.summary}</p>
+      )}
+
+      {stop.photo && (
+        <figure className="stop-detail-photo">
+          <Image
+            src={stop.photo.src}
+            alt={stop.photo.alt}
+            width={1200}
+            height={800}
+            sizes="(max-width: 768px) 100vw, 420px"
+          />
+          <figcaption>
+            Photo by{" "}
+            {stop.photo.photoUrl ? (
+              <>
+                <a href={stop.photo.photoUrl} target="_blank" rel="noopener noreferrer">
+                  {stop.photo.photographer}
+                </a>{" "}
+                on Pexels
+              </>
+            ) : (
+              stop.photo.photographer
+            )}
+          </figcaption>
+        </figure>
       )}
 
       {/* Structured metadata — quick reference */}

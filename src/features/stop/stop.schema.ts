@@ -1,6 +1,6 @@
 import { index, integer, jsonb, pgTable, real, text, boolean } from "drizzle-orm/pg-core";
 import { days } from "../day/day.schema";
-import type { DurationRange, CostInfo } from "@/core/stop-types";
+import type { DurationRange, CostInfo, StopPhoto } from "@/core/stop-types";
 
 export const stops = pgTable(
   "stops",
@@ -25,6 +25,7 @@ export const stops = pgTable(
     warnings: jsonb("warnings").$type<readonly string[]>().default([]),
     alternative: text("alternative"),
     audioUrl: text("audio_url"),
+    photo: jsonb("photo").$type<StopPhoto | null>(),
     visited: boolean("visited").notNull().default(false),
   },
   (table) => [index("idx_stops_day_id").on(table.dayId), index("idx_stops_visited").on(table.visited)],

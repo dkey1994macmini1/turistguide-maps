@@ -1,7 +1,8 @@
 "use client";
 
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from "react-leaflet";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import L from "leaflet";
 import type { DayWithStops, StopItem } from "@/types/api";
 
@@ -64,6 +65,50 @@ function MapClickHandler({ onMapClick }: { onMapClick: () => void }) {
   return null;
 }
 
+function PhotoLightbox({
+  photo,
+  onClose,
+}: {
+  photo: NonNullable<StopItem["photo"]>;
+  onClose: () => void;
+}) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  return createPortal(
+    <div className="photo-lightbox-backdrop" onClick={onClose}>
+      <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={photo.alt} onClick={(event) => event.stopPropagation()}>
+        <button ref={closeButtonRef} className="photo-lightbox-close" type="button" onClick={onClose} aria-label="Close photo viewer">
+          ×
+        </button>
+        <img src={photo.src} alt={photo.alt} />
+        <p>
+          Photo by{" "}
+          {photo.photoUrl ? (
+            <>
+              <a href={photo.photoUrl} target="_blank" rel="noopener noreferrer">
+                {photo.photographer}
+              </a>{" "}
+              on Pexels
+            </>
+          ) : (
+            photo.photographer
+          )}
+        </p>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 // Marker that auto-opens popup when selected
 function StopMarker({
   stop,
@@ -77,6 +122,7 @@ function StopMarker({
   onMarkerClick: (stopId: string) => void;
 }) {
   const markerRef = useRef<L.Marker>(null);
+  const [isPhotoOpen, setIsPhotoOpen] = useState(false);
 
   useEffect(() => {
     if (isSelected && markerRef.current) {
@@ -87,18 +133,52 @@ function StopMarker({
   }, [isSelected]);
 
   return (
-    <Marker
-      ref={markerRef}
-      position={[stop.lat, stop.lng]}
-      icon={createCustomIcon(label, isSelected, stop.visited)}
-      eventHandlers={{
-        click: () => onMarkerClick(stop.id),
-      }}
-    >
-      <Popup>
-        <strong>{stop.title}</strong>
-      </Popup>
-    </Marker>
+    <>
+      <Marker
+        ref={markerRef}
+        position={[stop.lat, stop.lng]}
+        icon={createCustomIcon(label, isSelected, stop.visited)}
+        eventHandlers={{
+          click: () => onMarkerClick(stop.id),
+        }}
+      >
+        <Popup>
+          <div className="stop-map-popup">
+            {stop.photo && (
+              <figure>
+                <button
+                  className="stop-map-popup-photo-button"
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setIsPhotoOpen(true);
+                  }}
+                  aria-label={`Open ${stop.photo.alt} fullscreen`}
+                >
+                  <img src={stop.photo.src} alt={stop.photo.alt} />
+                </button>
+                <figcaption>
+                  Photo by{" "}
+                  {stop.photo.photoUrl ? (
+                    <>
+                      <a href={stop.photo.photoUrl} target="_blank" rel="noopener noreferrer">
+                        {stop.photo.photographer}
+                      </a>{" "}
+                      on Pexels
+                    </>
+                  ) : (
+                    stop.photo.photographer
+                  )}
+                </figcaption>
+              </figure>
+            )}
+            <strong>{stop.title}</strong>
+            {stop.summary && <p>{stop.summary}</p>}
+          </div>
+        </Popup>
+      </Marker>
+      {isPhotoOpen && stop.photo && <PhotoLightbox photo={stop.photo} onClose={() => setIsPhotoOpen(false)} />}
+    </>
   );
 }
 

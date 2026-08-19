@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import type { CoordinateValidationError, UrlValidationError, SlugValidationError } from "./validation-errors";
 import type { Slug } from "@/core/branded";
 import { Slug as SlugBrand } from "@/core/branded";
+import type { StopPhoto } from "@/core/stop-types";
 
 const LAT_MIN = -90;
 const LAT_MAX = 90;
@@ -89,6 +90,36 @@ export const validateUrl = (url: string): Effect.Effect<string, UrlValidationErr
       url,
       message: `Invalid URL format: ${url}`,
     });
+  }
+};
+
+const LOCAL_STOP_PHOTO_PATH = /^\/images\/stops\/[a-z0-9][a-z0-9-]*\.(?:jpe?g|png|webp)$/;
+
+export const isValidStopPhoto = (value: unknown): value is StopPhoto => {
+  if (!value || typeof value !== "object") return false;
+
+  const photo = value as Record<string, unknown>;
+  if (
+    typeof photo.src !== "string" ||
+    typeof photo.alt !== "string" ||
+    typeof photo.photographer !== "string" ||
+    (photo.photoUrl !== undefined && typeof photo.photoUrl !== "string") ||
+    !LOCAL_STOP_PHOTO_PATH.test(photo.src)
+  ) {
+    return false;
+  }
+
+  if (photo.photoUrl === undefined) return true;
+
+  try {
+    const url = new URL(photo.photoUrl);
+    return (
+      url.protocol === "https:" &&
+      (url.hostname === "pexels.com" || url.hostname === "www.pexels.com") &&
+      url.pathname.startsWith("/photo/")
+    );
+  } catch {
+    return false;
   }
 };
 

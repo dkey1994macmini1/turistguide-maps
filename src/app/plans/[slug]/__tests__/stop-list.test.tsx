@@ -23,6 +23,7 @@ const makeStop = (overrides: Partial<StopItem> & { id: string; title: string }):
   warnings: [],
   alternative: null,
   audioUrl: null,
+  photo: null,
   visited: false,
   ...overrides,
 });

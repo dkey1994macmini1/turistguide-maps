@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Effect } from "effect";
 import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
 import { AppLayer } from "@/composition-root";
-import { validateCoordinates, validateUrl } from "@/core/validation";
+import { isValidStopPhoto, validateCoordinates, validateUrl } from "@/core/validation";
 import type { StopLink } from "@/core/stop-link";
 import type { DurationRange, CostInfo } from "@/core/stop-types";
 
@@ -42,7 +42,7 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { title, description, summary, lat, lng, sortOrder, links, duration, cost, reservation, bring, bestTime, warnings, alternative } = body as Record<string, unknown>;
+  const { title, description, summary, lat, lng, sortOrder, links, duration, cost, reservation, bring, bestTime, warnings, alternative, photo } = body as Record<string, unknown>;
 
   if (typeof title !== "string" || typeof lat !== "number" || typeof lng !== "number" || typeof sortOrder !== "number") {
     return NextResponse.json({ error: "title, lat, lng, and sortOrder are required" }, { status: 400 });
@@ -66,6 +66,10 @@ export async function POST(
     }
   }
 
+  if (photo !== undefined && photo !== null && !isValidStopPhoto(photo)) {
+    return NextResponse.json({ error: "Invalid stop photo" }, { status: 400 });
+  }
+
   const result = await Effect.runPromiseExit(
     Effect.gen(function* () {
       const repo = yield* StopRepositoryPort;
@@ -85,6 +89,7 @@ export async function POST(
         bestTime: typeof bestTime === "string" ? bestTime : null,
         warnings: Array.isArray(warnings) ? warnings : [],
         alternative: typeof alternative === "string" ? alternative : null,
+        photo: photo === null ? null : photo,
       });
     }).pipe(Effect.provide(AppLayer))
   );

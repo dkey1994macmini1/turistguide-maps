@@ -8,6 +8,7 @@ export type Plan = {
   readonly title: string;
   readonly description: string;
   readonly startDate: Date | null;
+  readonly archivedAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 };
@@ -24,4 +25,5 @@ export type PlanUpdateInput = {
   readonly title?: string;
   readonly description?: string;
   readonly startDate?: Date | null;
+  readonly archivedAt?: Date | null;
 };

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Effect } from "effect";
 import { StopRepositoryPort } from "@/core/ports/stop-repository-port";
 import { AppLayer } from "@/composition-root";
-import { validateCoordinates, validateUrl } from "@/core/validation";
+import { isValidStopPhoto, validateCoordinates, validateUrl } from "@/core/validation";
 import type { StopLink } from "@/core/stop-link";
 import type { DurationRange, CostInfo } from "@/core/stop-types";
 
@@ -21,7 +21,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { title, description, summary, lat, lng, sortOrder, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl, visited } = body as Record<string, unknown>;
+  const { title, description, summary, lat, lng, sortOrder, links, duration, cost, reservation, bring, bestTime, warnings, alternative, audioUrl, photo, visited } = body as Record<string, unknown>;
 
   if (typeof lat === "number" && typeof lng === "number") {
     const coordResult = Effect.runSyncExit(validateCoordinates(lat, lng));
@@ -39,6 +39,10 @@ export async function PATCH(
         }
       }
     }
+  }
+
+  if (photo !== undefined && photo !== null && !isValidStopPhoto(photo)) {
+    return NextResponse.json({ error: "Invalid stop photo" }, { status: 400 });
   }
 
   const result = await Effect.runPromiseExit(
@@ -60,6 +64,7 @@ export async function PATCH(
         ...(Array.isArray(warnings) && { warnings }),
         ...(alternative !== undefined && { alternative: typeof alternative === "string" ? alternative : null }),
         ...(audioUrl !== undefined && { audioUrl: typeof audioUrl === "string" ? audioUrl : null }),
+        ...(photo !== undefined && { photo: photo === null ? null : photo }),
         ...(visited !== undefined && { visited: typeof visited === "boolean" ? visited : undefined }),
       });
     }).pipe(Effect.provide(AppLayer))

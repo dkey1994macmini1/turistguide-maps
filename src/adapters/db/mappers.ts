@@ -6,7 +6,7 @@ import type { Stop } from "@/core/stop";
 import type { Plan } from "@/core/plan";
 import type { Day } from "@/core/day";
 import type { StopLink } from "@/core/stop-link";
-import type { DurationRange, CostInfo } from "@/core/stop-types";
+import type { DurationRange, CostInfo, StopPhoto } from "@/core/stop-types";
 import type { StopDAO, DayDAO, PlanDAO } from "@/common/db/schema";
 
 export const toStop = (row: StopDAO): Stop => ({
@@ -27,6 +27,7 @@ export const toStop = (row: StopDAO): Stop => ({
   warnings: (row.warnings ?? []) as ReadonlyArray<string>,
   alternative: row.alternative ?? null,
   audioUrl: row.audioUrl ?? null,
+  photo: (row.photo as StopPhoto) ?? null,
   visited: row.visited ?? false,
 });
 
@@ -44,6 +45,7 @@ export const toPlan = (row: PlanDAO): Plan => ({
   title: row.title,
   description: row.description,
   startDate: row.startDate ?? null,
+  archivedAt: row.archivedAt ?? null,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });
