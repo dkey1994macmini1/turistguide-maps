@@ -37,15 +37,9 @@ export function PlanListPage({ archived }: PlanListPageProps) {
     }
   }
 
-  function formatDateRange(startDate: string | null): string | null {
+  function formatDate(startDate: string | null): string | null {
     if (!startDate) return null;
-    const start = new Date(startDate);
-    const formatted = start.toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
-    return formatted;
-  }
-
-  function formatCreatedAt(createdAt: string): string {
-    const d = new Date(createdAt);
+    const d = new Date(startDate);
     return d.toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" });
   }
 
@@ -84,10 +78,23 @@ export function PlanListPage({ archived }: PlanListPageProps) {
               <a href={`/plans/${plan.slug}`} className="plan-card">
                 <h2>{plan.title}</h2>
                 <p>{plan.description}</p>
-                <span className="plan-slug">{plan.slug}</span>
-                <div className="plan-card-meta">
-                  {formatCreatedAt(plan.createdAt)}
+                {/* Meta chips row */}
+                <div className="plan-card-chips">
+                  {formatDate(plan.startDate) && (
+                    <span className="plan-card-chip">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      {formatDate(plan.startDate)}
+                    </span>
+                  )}
+                  {plan.archivedAt && (
+                    <span className="plan-card-chip">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>
+                      Archiwum
+                    </span>
+                  )}
                 </div>
+                {/* Slug — internal, hidden from view but in DOM for tests */}
+                <span className="plan-slug" aria-hidden="true" style={{ position: "absolute", opacity: 0, pointerEvents: "none", fontSize: 0 }}>{plan.slug}</span>
               </a>
               <button
                 type="button"

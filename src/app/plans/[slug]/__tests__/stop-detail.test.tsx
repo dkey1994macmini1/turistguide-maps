@@ -217,7 +217,7 @@ describe("StopDetail", () => {
     render(<StopDetail stop={stopNoAudio} onClose={() => {}} audioManagement={false} slug="test-plan" />);
 
     // Generate audio button should still be visible
-    expect(screen.getByText("🔊 Generuj audio")).toBeInTheDocument();
+    expect(screen.getByText("Generuj audio z opisu")).toBeInTheDocument();
     // Upload button should be hidden
     expect(screen.queryByText("Dodaj plik")).not.toBeInTheDocument();
   });

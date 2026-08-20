@@ -384,7 +384,6 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
                   disabled={generating}
                 >
                   Generuj audio z opisu
-                  <span aria-hidden="true" style={{ position: "absolute", opacity: 0, pointerEvents: "none", fontSize: 0 }}>🔊 Generuj audio</span>
                 </button>
               )}
               {audioManagement && (
@@ -397,7 +396,6 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
                     disabled={uploading || generating}
                     style={{ display: "none" }}
                   />
-                  <span aria-hidden="true" style={{ position: "absolute", opacity: 0, pointerEvents: "none", fontSize: 0 }}>Dodaj plik</span>
                 </label>
               )}
             </div>
