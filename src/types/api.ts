@@ -9,6 +9,7 @@ export type PlanListItem = {
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  heroStopId: string | null;
 };
 
 export type DayItem = {

@@ -48,4 +48,5 @@ export const toPlan = (row: PlanDAO): Plan => ({
   archivedAt: row.archivedAt ?? null,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
+  heroStopId: row.heroStopId ?? null,
 });
