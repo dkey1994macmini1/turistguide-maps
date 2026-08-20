@@ -102,8 +102,8 @@ function SortableStopItem({
           <strong className="stop-title">{stop.title}</strong>
           {stop.summary && (
             <span className="stop-summary">
-              {stop.summary.length > 30
-                ? stop.summary.slice(0, 30).trimEnd() + "\u2026"
+              {stop.summary.length > 26
+                ? stop.summary.slice(0, 26).trimEnd() + "\u2026"
                 : stop.summary}
             </span>
           )}
