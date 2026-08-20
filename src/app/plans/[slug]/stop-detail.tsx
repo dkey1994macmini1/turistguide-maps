@@ -40,6 +40,30 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
   const closeRef = useRef<HTMLButtonElement>(null);
   const touchStartY = useRef<number | null>(null);
   const currentDragY = useRef(0);
+  const sheetTouchStartY = useRef<number | null>(null);
+
+  // Scroll past end → close
+  const handleSheetTouchStart = (e: React.TouchEvent) => {
+    sheetTouchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleSheetTouchEnd = (e: React.TouchEvent) => {
+    if (sheetTouchStartY.current === null) return;
+    const el = sheetRef.current;
+    if (el) {
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+      const delta = e.changedTouches[0].clientY - sheetTouchStartY.current;
+      if (atBottom && delta > 60) onClose();
+    }
+    sheetTouchStartY.current = null;
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    const el = sheetRef.current;
+    if (!el) return;
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+    if (atBottom && e.deltaY > 30) onClose();
+  };
 
   // Focus trap + Escape to close
   useEffect(() => {
@@ -188,7 +212,16 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
   return (
     <>
       <div className="sheet-overlay" onClick={onClose} />
-      <div className="stop-detail" ref={sheetRef} role="dialog" aria-modal="true" aria-label={stop.title}>
+      <div
+        className="stop-detail"
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={stop.title}
+        onTouchStart={handleSheetTouchStart}
+        onTouchEnd={handleSheetTouchEnd}
+        onWheel={handleWheel}
+      >
         <div
           className="sheet-handle"
           onTouchStart={handleTouchStart}
