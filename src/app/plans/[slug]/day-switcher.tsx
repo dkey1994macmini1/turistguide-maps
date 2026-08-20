@@ -18,7 +18,7 @@ export function DaySwitcher({ days, activeIndex, onDayChange, startDate }: DaySw
     if (!container) return;
     const activeBtn = container.querySelector(".day-tab.active") as HTMLElement | null;
     if (!activeBtn) return;
-    activeBtn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    activeBtn.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
   }, [activeIndex]);
 
   if (days.length <= 1) return null;
