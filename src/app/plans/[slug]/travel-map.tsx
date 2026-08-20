@@ -182,6 +182,36 @@ function StopMarker({
   );
 }
 
+// Group stops by coordinates and offset overlapping markers so all are clickable
+function offsetOverlappingStops(stops: StopItem[]): Array<{ stop: StopItem; lat: number; lng: number }> {
+  const groups = new Map<string, StopItem[]>();
+  for (const stop of stops) {
+    const key = `${stop.lat.toFixed(6)},${stop.lng.toFixed(6)}`;
+    const group = groups.get(key);
+    if (group) group.push(stop);
+    else groups.set(key, [stop]);
+  }
+
+  const result: Array<{ stop: StopItem; lat: number; lng: number }> = [];
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      result.push({ stop: group[0], lat: group[0].lat, lng: group[0].lng });
+    } else {
+      // Fan out overlapping markers in a small spiral
+      const offset = 0.003; // ~300m
+      group.forEach((stop, i) => {
+        const angle = (i * 2 * Math.PI) / group.length;
+        result.push({
+          stop,
+          lat: stop.lat + offset * Math.sin(angle),
+          lng: stop.lng + offset * Math.cos(angle),
+        });
+      });
+    }
+  }
+  return result;
+}
+
 export function TravelMap({
   activeDay,
   allDays,
@@ -194,15 +224,20 @@ export function TravelMap({
   const defaultCenter: [number, number] = [21.45, -157.97]; // Oahu center
   const defaultZoom = 11;
 
-  const activeDayMarkers = activeDay?.stops.map((stop, idx) => (
-    <StopMarker
-      key={stop.id}
-      stop={stop}
-      label={String(idx + 1)}
-      isSelected={stop.id === selectedStopId}
-      onMarkerClick={onMarkerClick}
-    />
-  ));
+  const offsetStops = activeDay ? offsetOverlappingStops(activeDay.stops) : [];
+
+  const activeDayMarkers = offsetStops.map(({ stop, lat, lng }, idx) => {
+    const offsetStop = { ...stop, lat, lng };
+    return (
+      <StopMarker
+        key={stop.id}
+        stop={offsetStop}
+        label={String(activeDay!.stops.findIndex((s) => s.id === stop.id) + 1)}
+        isSelected={stop.id === selectedStopId}
+        onMarkerClick={onMarkerClick}
+      />
+    );
+  });
 
   const otherDayMarkers = allDays
     .filter((day) => day.id !== activeDay?.id)
