@@ -514,14 +514,6 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
           </div>
         )}
       </div>
-      {/* Sticky close button at bottom — always reachable when scrolled down */}
-      <button
-        className="sheet-close-btn-bottom"
-        onClick={onClose}
-        aria-label="Zamknij"
-      >
-        Zamknij
-      </button>
     </>
   );
 }

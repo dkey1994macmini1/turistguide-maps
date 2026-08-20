@@ -100,28 +100,39 @@ describe("DaySwitcher", () => {
     expect(counts[1].textContent).toBe("0/1 zrob.");
   });
 
-  it("scrolls active tab to left when activeIndex changes", () => {
-    const scrollToMock = vi.fn();
-    // scrollTo is not implemented in jsdom — mock it on the container
-    const originalScrollTo = HTMLElement.prototype.scrollTo;
-    HTMLElement.prototype.scrollTo = scrollToMock;
+  it("scrolls active tab into view when activeIndex changes", () => {
+    const scrollIntoViewMock = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      value: scrollIntoViewMock,
+      writable: true,
+      configurable: true,
+    });
 
     const days = Array.from({ length: 5 }, (_, i) => makeDay({ dayNumber: i + 1 }));
     const { rerender } = render(
       <DaySwitcher days={days} activeIndex={0} onDayChange={() => {}} startDate={null} />
     );
 
-    scrollToMock.mockClear();
+    // Clear any calls from initial mount
+    scrollIntoViewMock.mockClear();
 
+    // Change to day 4 — should scroll active tab into view
     rerender(
       <DaySwitcher days={days} activeIndex={3} onDayChange={() => {}} startDate={null} />
     );
 
-    expect(scrollToMock).toHaveBeenCalled();
-    expect(scrollToMock.mock.calls[0][0]).toMatchObject({
+    expect(scrollIntoViewMock).toHaveBeenCalled();
+    expect(scrollIntoViewMock.mock.calls[0][0]).toMatchObject({
       behavior: "smooth",
+      inline: "center",
+      block: "nearest",
     });
 
-    HTMLElement.prototype.scrollTo = originalScrollTo;
+    // Restore
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
   });
 });
