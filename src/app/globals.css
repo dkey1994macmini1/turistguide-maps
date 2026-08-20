@@ -967,6 +967,8 @@ button {
   padding: 10px 0 4px;
   position: relative;
   z-index: 6;
+  cursor: grab;
+  touch-action: none;
 }
 
 .sheet-handle-bar {

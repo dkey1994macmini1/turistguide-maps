@@ -38,6 +38,8 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const touchStartY = useRef<number | null>(null);
+  const currentDragY = useRef(0);
 
   // Focus trap + Escape to close
   useEffect(() => {
@@ -72,6 +74,35 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
       document.body.style.overflow = "";
     };
   }, [onClose]);
+
+  // Swipe-down to close on the handle
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    currentDragY.current = 0;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const delta = e.touches[0].clientY - touchStartY.current;
+    if (delta > 0 && sheetRef.current) {
+      currentDragY.current = delta;
+      sheetRef.current.style.transform = `translateY(${delta}px)`;
+      sheetRef.current.style.transition = "none";
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartY.current === null) return;
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = "";
+      sheetRef.current.style.transform = "";
+    }
+    if (currentDragY.current > 80) {
+      onClose();
+    }
+    touchStartY.current = null;
+    currentDragY.current = 0;
+  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -158,7 +189,12 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
     <>
       <div className="sheet-overlay" onClick={onClose} />
       <div className="stop-detail" ref={sheetRef} role="dialog" aria-modal="true" aria-label={stop.title}>
-        <div className="sheet-handle">
+        <div
+          className="sheet-handle"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div className="sheet-handle-bar" />
         </div>
 
