@@ -41,43 +41,6 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
   const touchStartY = useRef<number | null>(null);
   const currentDragY = useRef(0);
 
-  // Swipe down on the whole sheet (when at scroll bottom) → close
-  const handleSheetTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
-    currentDragY.current = 0;
-  };
-
-  const handleSheetTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY.current === null) return;
-    const el = sheetRef.current;
-    if (!el) return;
-    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
-    const delta = e.touches[0].clientY - touchStartY.current;
-    // Only drag the sheet if we're at the bottom AND finger moves down
-    if (atBottom && delta > 0) {
-      currentDragY.current = delta;
-      const eased = delta * 0.4;
-      el.style.transform = `translateY(${eased}px)`;
-      el.style.transition = "none";
-      e.preventDefault();
-    }
-  };
-
-  const handleSheetTouchEnd = () => {
-    const el = sheetRef.current;
-    if (el && currentDragY.current > 0) {
-      el.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
-      el.style.transform = "";
-      if (currentDragY.current > 80) {
-        onClose();
-      } else {
-        setTimeout(() => { if (el) el.style.transition = ""; }, 300);
-      }
-    }
-    touchStartY.current = null;
-    currentDragY.current = 0;
-  };
-
   // Focus trap + Escape to close
   useEffect(() => {
     closeRef.current?.focus();
@@ -225,16 +188,7 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
   return (
     <>
       <div className="sheet-overlay" onClick={onClose} />
-      <div
-        className="stop-detail"
-        ref={sheetRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={stop.title}
-        onTouchStart={handleSheetTouchStart}
-        onTouchMove={handleSheetTouchMove}
-        onTouchEnd={handleSheetTouchEnd}
-      >
+      <div className="stop-detail" ref={sheetRef} role="dialog" aria-modal="true" aria-label={stop.title}>
         <div
           className="sheet-handle"
           onTouchStart={handleTouchStart}
