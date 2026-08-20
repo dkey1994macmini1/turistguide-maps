@@ -965,10 +965,13 @@ button {
   display: flex;
   justify-content: center;
   padding: 10px 0 4px;
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 6;
   cursor: grab;
   touch-action: none;
+  background: var(--bg);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .sheet-handle-bar {
@@ -1001,6 +1004,28 @@ button {
 
 .sheet-close-btn:hover {
   background: rgba(0,0,0,0.5);
+}
+
+/* Sticky close button at bottom of sheet — always visible when scrolled */
+.sheet-close-btn-bottom {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.sheet-close-btn-bottom:hover {
+  background: var(--surface);
 }
 
 /* Sheet hero — photo with title overlay */

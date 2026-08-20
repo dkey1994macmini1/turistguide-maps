@@ -18,7 +18,13 @@ export function DaySwitcher({ days, activeIndex, onDayChange, startDate }: DaySw
     if (!container) return;
     const activeBtn = container.querySelector(".day-tab.active") as HTMLElement | null;
     if (!activeBtn) return;
-    activeBtn.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+    // Scroll so the active tab is at the left edge of the visible area
+    const scrollLeft = activeBtn.offsetLeft - 16;
+    if (typeof container.scrollTo === "function") {
+      container.scrollTo({ left: scrollLeft, behavior: "smooth" });
+    } else {
+      container.scrollLeft = scrollLeft;
+    }
   }, [activeIndex]);
 
   if (days.length <= 1) return null;
