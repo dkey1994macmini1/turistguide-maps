@@ -62,7 +62,7 @@ export function OfflineDialog({
   return (
     <div className="offline-dialog-overlay" onClick={handleClose}>
       <div className="offline-dialog" onClick={(e) => e.stopPropagation()}>
-        <h2>📲 Zapisz offline</h2>
+        <h2>Zapisz offline</h2>
 
         {progress.phase === "idle" && (
           <>
@@ -88,10 +88,10 @@ export function OfflineDialog({
             )}
 
             <div className="offline-dialog-actions">
-              <button className="btn btn-primary" onClick={handleSave}>
+              <button className="offline-dialog-btn primary" onClick={handleSave}>
                 Zapisz offline
               </button>
-              <button className="btn btn-secondary" onClick={handleClose}>
+              <button className="offline-dialog-btn" onClick={handleClose}>
                 Anuluj
               </button>
             </div>
@@ -109,12 +109,11 @@ export function OfflineDialog({
 
         {isDone && (
           <div className="offline-dialog-success">
-            <p className="offline-dialog-success-icon">✅</p>
-            <p>Plan zapisany offline!</p>
+            <p className="offline-dialog-success-text">Plan zapisany offline!</p>
             <p className="offline-dialog-timestamp">
               Zapisano: {new Date().toLocaleString("pl-PL")}
             </p>
-            <button className="btn btn-primary" onClick={handleClose}>
+            <button className="offline-dialog-btn primary" onClick={handleClose}>
               Zamknij
             </button>
           </div>
@@ -122,106 +121,18 @@ export function OfflineDialog({
 
         {isError && (
           <div className="offline-dialog-error">
-            <p>❌ Błąd: {progress.error}</p>
+            <p>Błąd: {progress.error}</p>
             <div className="offline-dialog-actions">
-              <button className="btn btn-primary" onClick={handleSave}>
+              <button className="offline-dialog-btn primary" onClick={handleSave}>
                 Spróbuj ponownie
               </button>
-              <button className="btn btn-secondary" onClick={handleClose}>
+              <button className="offline-dialog-btn" onClick={handleClose}>
                 Zamknij
               </button>
             </div>
           </div>
         )}
       </div>
-
-      <style>{`
-        .offline-dialog-overlay {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-        .offline-dialog {
-          background: white;
-          border-radius: 12px;
-          padding: 24px;
-          max-width: 400px;
-          width: 90%;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.2);
-        }
-        .offline-dialog h2 {
-          margin: 0 0 12px;
-          font-size: 1.2rem;
-          color: #2d6a4f;
-        }
-        .offline-dialog-description {
-          color: #555;
-          font-size: 0.9rem;
-          margin-bottom: 16px;
-        }
-        .offline-dialog-checkbox {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 16px;
-          font-size: 0.9rem;
-          cursor: pointer;
-        }
-        .offline-dialog-checkbox input[type="checkbox"] {
-          width: 18px;
-          height: 18px;
-          accent-color: #2d6a4f;
-        }
-        .offline-dialog-actions {
-          display: flex;
-          gap: 8px;
-          justify-content: flex-end;
-        }
-        .offline-dialog-progress {
-          text-align: center;
-        }
-        .offline-dialog-status {
-          font-size: 0.9rem;
-          color: #555;
-          margin-top: 8px;
-        }
-        .offline-dialog-success {
-          text-align: center;
-        }
-        .offline-dialog-success-icon {
-          font-size: 2rem;
-          margin: 0 0 8px;
-        }
-        .offline-dialog-timestamp {
-          font-size: 0.85rem;
-          color: #888;
-        }
-        .offline-dialog-error {
-          text-align: center;
-        }
-        .offline-dialog-error p {
-          color: #c0392b;
-          margin-bottom: 16px;
-        }
-        .progress-bar-container {
-          width: 100%;
-          height: 8px;
-          background: #e0e0e0;
-          border-radius: 4px;
-          overflow: hidden;
-          margin-top: 16px;
-        }
-        .progress-bar-fill {
-          height: 100%;
-          background: #2d6a4f;
-          border-radius: 4px;
-          transition: width 0.3s ease;
-        }
-      `}</style>
     </div>
   );
 }

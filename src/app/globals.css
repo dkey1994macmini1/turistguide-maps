@@ -1843,3 +1843,136 @@ button {
     padding: 8px 16px 80px;
   }
 }
+
+/* ═══════════════════════ Offline Dialog ═══════════════════════ */
+
+.offline-dialog-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.offline-dialog {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+}
+
+.offline-dialog h2 {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+  color: var(--ink);
+}
+
+.offline-dialog-description {
+  color: var(--stone);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.offline-dialog-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.offline-dialog-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.offline-dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.offline-dialog-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.offline-dialog-btn:hover {
+  background: var(--surface);
+}
+
+.offline-dialog-btn.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.offline-dialog-btn.primary:hover {
+  background: #c2410c;
+}
+
+.offline-dialog-progress {
+  text-align: center;
+}
+
+.offline-dialog-status {
+  font-size: 0.9rem;
+  color: var(--stone);
+  margin-top: 8px;
+}
+
+.offline-dialog-success {
+  text-align: center;
+}
+
+.offline-dialog-success-text {
+  font-size: 1rem;
+  color: var(--ink);
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
+.offline-dialog-timestamp {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.offline-dialog-error {
+  text-align: center;
+}
+
+.offline-dialog-error p {
+  color: var(--danger);
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
