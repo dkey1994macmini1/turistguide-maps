@@ -40,28 +40,24 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
   const closeRef = useRef<HTMLButtonElement>(null);
   const touchStartY = useRef<number | null>(null);
   const currentDragY = useRef(0);
-  const overscrollStartY = useRef<number | null>(null);
-  const isOverscrolling = useRef(false);
 
-  // Scroll past end → rubber-band drag, release closes
+  // Swipe down on the whole sheet (when at scroll bottom) → close
   const handleSheetTouchStart = (e: React.TouchEvent) => {
-    overscrollStartY.current = e.touches[0].clientY;
-    isOverscrolling.current = false;
+    touchStartY.current = e.touches[0].clientY;
+    currentDragY.current = 0;
   };
 
   const handleSheetTouchMove = (e: React.TouchEvent) => {
-    if (overscrollStartY.current === null) return;
+    if (touchStartY.current === null) return;
     const el = sheetRef.current;
     if (!el) return;
     const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
-    const deltaY = e.touches[0].clientY - overscrollStartY.current;
-
-    if (atBottom && deltaY < 0) {
-      // Finger moving up (scrolling down) past the end → rubber-band
-      isOverscrolling.current = true;
-      const drag = Math.abs(deltaY);
-      const eased = drag * 0.4; // resistance like iOS rubber-band
-      el.style.transform = `translateY(${-eased}px)`;
+    const delta = e.touches[0].clientY - touchStartY.current;
+    // Only drag the sheet if we're at the bottom AND finger moves down
+    if (atBottom && delta > 0) {
+      currentDragY.current = delta;
+      const eased = delta * 0.4;
+      el.style.transform = `translateY(${eased}px)`;
       el.style.transition = "none";
       e.preventDefault();
     }
@@ -69,26 +65,17 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
 
   const handleSheetTouchEnd = () => {
     const el = sheetRef.current;
-    if (el && isOverscrolling.current) {
+    if (el && currentDragY.current > 0) {
       el.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
-      const totalDrag = el.style.transform ? parseFloat(el.style.transform.match(/-?[\d.]+/)?.[0] || "0") : 0;
       el.style.transform = "";
-      // If dragged far enough, close
-      if (totalDrag < -60) {
+      if (currentDragY.current > 80) {
         onClose();
       } else {
         setTimeout(() => { if (el) el.style.transition = ""; }, 300);
       }
     }
-    overscrollStartY.current = null;
-    isOverscrolling.current = false;
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    const el = sheetRef.current;
-    if (!el) return;
-    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
-    if (atBottom && e.deltaY > 30) onClose();
+    touchStartY.current = null;
+    currentDragY.current = 0;
   };
 
   // Focus trap + Escape to close
@@ -247,7 +234,6 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
         onTouchStart={handleSheetTouchStart}
         onTouchMove={handleSheetTouchMove}
         onTouchEnd={handleSheetTouchEnd}
-        onWheel={handleWheel}
       >
         <div
           className="sheet-handle"
