@@ -1,28 +1,37 @@
 # turistguide-maps
 
-Static travel maps for `turistguide.karwackid.cloud`.
+Mobile-first travel itinerary viewer for `https://turistguide.karwackid.cloud`.
 
-## Structure
+Next.js 15, React, Leaflet, Effect, Drizzle, and PostgreSQL provide the web
+viewer, offline snapshots, PDF export, and audio guides. The web UI keeps its
+own REST editing workflow; agents and scripts manage itinerary data through the
+one-shot CLI.
 
-- `public/index.html` — landing page
-- `public/oahu/index.html` — Oahu trip map based on OpenStreetMap + Leaflet
-
-## Local preview
-
-From the project root:
+## Run
 
 ```bash
-python3 -m http.server 8787 -d public
+npm run dev
+npm run test:run
+npm run build
 ```
 
-Then open:
+## CLI
 
-- `http://127.0.0.1:8787/`
-- `http://127.0.0.1:8787/oahu/`
+The executable loads `.env` then `.env.local`; data commands require
+`DATABASE_URL`.
+
+```bash
+node bin/turistguide-maps.mjs commands --json
+node bin/turistguide-maps.mjs plan list --limit 50
+node bin/turistguide-maps.mjs plan get --slug tuscany-family-august-2026
+node bin/turistguide-maps.mjs stop add --slug trip --day 1 --input stop.json
+```
+
+All successful commands emit a JSON envelope to stdout. Failures emit one
+structured JSON error to stderr. See [docs/cli-contract.md](docs/cli-contract.md)
+for command, input, confirmation, and exit-code semantics.
 
 ## Deployment
 
-Served directly by local nginx on macOS and exposed through Cloudflare Tunnel at:
-
-- `https://turistguide.karwackid.cloud/`
-- `https://turistguide.karwackid.cloud/oahu/`
+Use `scripts/release.sh` for the local production deployment. It tests, builds,
+restarts the Next.js server on `127.0.0.1:3000`, and performs its smoke check.

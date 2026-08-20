@@ -8,7 +8,7 @@ On every new session in this project:
 
 ## Active Resources
 
-- **MCP server:** `turistguide-maps` → `~/projects/turistguide-maps/bin/turistguide-maps-mcp.mjs`
+- **CLI:** `node ~/projects/turistguide-maps/bin/turistguide-maps.mjs`
 - **Database:** turistguide-maps PostgreSQL (via Drizzle ORM)
 - **Production:** `turistguide.karwackid.cloud` (behind Cloudflare Access)
 
@@ -34,5 +34,5 @@ Cloudflare Tunnel routes `turistguide.karwackid.cloud` directly to `http://127.0
 - [ ] `npm run test` passes
 - [ ] `npm run build` succeeds with zero errors
 - [ ] Dynamic import `ssr: false` for Leaflet
-- [ ] MCP launcher used (not direct `tsx src/mcp/server.ts`)
+- [ ] CLI invoked through `bin/turistguide-maps.mjs`
 - [ ] No raw Google Maps data in wiki pages (ToS)

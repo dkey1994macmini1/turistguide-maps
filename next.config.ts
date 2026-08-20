@@ -4,6 +4,7 @@ import path from "path";
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname, ".."),
   serverExternalPackages: ["pdfkit", "sharp"],
+  allowedDevOrigins: ["turistguide.karwackid.cloud"],
   async rewrites() {
     return [
       {

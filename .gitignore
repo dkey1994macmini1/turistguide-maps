@@ -32,6 +32,9 @@ tmp/
 # Audio uploads (user-generated content)
 storage/
 
+# Local travel photos
+public/images/stops/
+
 # ── GSD baseline (auto-generated) ──
 .mcp.json
 .worktrees/
