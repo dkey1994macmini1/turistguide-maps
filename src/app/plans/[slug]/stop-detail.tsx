@@ -52,8 +52,9 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
     const el = sheetRef.current;
     if (el) {
       const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+      // Scrolling down = finger moves up = delta negative
       const delta = e.changedTouches[0].clientY - sheetTouchStartY.current;
-      if (atBottom && delta > 60) onClose();
+      if (atBottom && delta < -50) onClose();
     }
     sheetTouchStartY.current = null;
   };
