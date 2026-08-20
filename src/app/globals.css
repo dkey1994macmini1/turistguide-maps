@@ -424,7 +424,7 @@ button {
 .hero-header-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(28,25,23,0.85), rgba(28,25,23,0.15));
+  background: linear-gradient(to top, rgba(28,25,23,0.85) 0%, rgba(28,25,23,0.4) 50%, rgba(28,25,23,0.15) 100%);
 }
 
 .hero-header-topbar {
@@ -442,33 +442,34 @@ button {
 .hero-header-back {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: white;
-  font-size: 1.1rem;
-  transition: background 0.15s ease;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  transition: color 0.15s ease;
 }
 
 .hero-header-back:hover {
-  background: rgba(255,255,255,0.25);
+  color: white;
   text-decoration: none;
+}
+
+.hero-header-back svg {
+  stroke: rgba(255,255,255,0.8);
 }
 
 .hero-header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .hero-header-actions .offline-badge {
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border-radius: 12px;
 }
 
@@ -476,14 +477,13 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.15);
   color: white;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .hero-header-actions .settings-menu-icon:hover {
@@ -764,26 +764,27 @@ button {
 /* Meta chips row */
 .stop-meta-chips {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  align-items: center;
+  gap: 10px;
   margin-top: 4px;
+  flex-wrap: wrap;
 }
 
 .stop-meta-chip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   color: var(--muted);
-  background: var(--surface);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  line-height: 1.3;
+}
+
+.stop-meta-chip svg {
+  width: 12px;
+  height: 12px;
 }
 
 .stop-meta-chip.warn {
   color: var(--warn);
-  background: #fef3c7;
 }
 
 /* Order number (hidden in card layout, used by tests) */
@@ -850,27 +851,9 @@ button {
   color: white;
 }
 
-/* Drag handle */
+/* Drag handle — invisible, whole card draggable via long-press */
 .stop-list-drag-handle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  color: var(--muted);
-  cursor: grab;
-  border-radius: var(--radius-sm);
-  transition: color 0.1s ease, background 0.1s ease;
-}
-
-.stop-list-drag-handle:active {
-  cursor: grabbing;
-}
-
-.stop-list-drag-handle:hover {
-  color: var(--accent);
-  background: var(--accent-light);
+  display: none;
 }
 
 /* ═══════════════════════ Bottom Sheet (Stop Detail) ═══════════════════════ */

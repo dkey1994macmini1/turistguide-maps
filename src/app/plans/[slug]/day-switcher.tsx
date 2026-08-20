@@ -32,6 +32,8 @@ export function DaySwitcher({ days, activeIndex, onDayChange, startDate }: DaySw
         {days.map((day, index) => {
           const isPast = computeIsPast(day.dayNumber, startDate);
           const isActive = index === activeIndex;
+          const doneCount = day.stops.filter((s) => s.visited).length;
+          const totalCount = day.stops.length;
           return (
             <button
               key={day.id}
@@ -42,7 +44,7 @@ export function DaySwitcher({ days, activeIndex, onDayChange, startDate }: DaySw
             >
               <span className={`day-number ${isPast ? "past-number" : ""}`}>D{day.dayNumber}</span>
               <span className="day-title">{day.title ?? `Day ${day.dayNumber}`}</span>
-              <span className="day-stop-count">{day.stops.length}</span>
+              <span className="day-stop-count">{doneCount}/{totalCount} zrob.</span>
             </button>
           );
         })}

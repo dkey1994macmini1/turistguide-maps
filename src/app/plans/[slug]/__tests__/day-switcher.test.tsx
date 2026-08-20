@@ -93,9 +93,11 @@ describe("DaySwitcher", () => {
     ];
     render(<DaySwitcher days={days} activeIndex={0} onDayChange={() => {}} />);
 
-    // Stop counts are rendered in spans
-    expect(screen.getByText("2")).toBeInTheDocument();
-    expect(screen.getByText("1")).toBeInTheDocument();
+    // Stop counts show done/total format
+    const counts = document.querySelectorAll(".day-stop-count");
+    expect(counts).toHaveLength(2);
+    expect(counts[0].textContent).toBe("0/2 zrob.");
+    expect(counts[1].textContent).toBe("0/1 zrob.");
   });
 
   it("scrolls active tab into view when activeIndex changes", () => {

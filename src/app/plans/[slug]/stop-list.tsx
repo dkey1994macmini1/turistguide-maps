@@ -70,22 +70,14 @@ function SortableStopItem({
         }`}
         onClick={() => onSelectStop(stop)}
       >
-        {/* Drag handle */}
+        {/* Drag handle — invisible, whole card is draggable via long-press */}
         <span
           className="stop-list-drag-handle"
           {...attributes}
           {...listeners}
           title="Przeciągnij, aby zmienić kolejność"
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="5" cy="4" r="1.5" fill="currentColor" />
-            <circle cx="11" cy="4" r="1.5" fill="currentColor" />
-            <circle cx="5" cy="8" r="1.5" fill="currentColor" />
-            <circle cx="11" cy="8" r="1.5" fill="currentColor" />
-            <circle cx="5" cy="12" r="1.5" fill="currentColor" />
-            <circle cx="11" cy="12" r="1.5" fill="currentColor" />
-          </svg>
-        </span>
+          aria-hidden="true"
+        />
 
         {/* Thumbnail */}
         {stop.photo ? (
@@ -116,17 +108,20 @@ function SortableStopItem({
             <div className="stop-meta-chips">
               {stop.duration && (
                 <span className="stop-meta-chip">
-                  ⏱ {stop.duration.min}-{stop.duration.max} min
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {stop.duration.min}-{stop.duration.max} min
                 </span>
               )}
               {stop.cost && (
                 <span className="stop-meta-chip">
-                  $ {stop.cost.amount} {stop.cost.currency}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                  {stop.cost.amount} {stop.cost.currency}
                 </span>
               )}
               {stop.warnings.length > 0 && (
                 <span className="stop-meta-chip warn">
-                  ⚠ {stop.warnings.length}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  {stop.warnings.length}
                 </span>
               )}
             </div>
@@ -142,7 +137,10 @@ function SortableStopItem({
             onToggleVisited?.(stop.id, !stop.visited);
           }}
         >
-          {stop.visited ? "✓" : "○"}
+          {stop.visited ? (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          ) : null}
+          <span aria-hidden="true" style={{ position: "absolute", opacity: 0, pointerEvents: "none", fontSize: 0 }}>{stop.visited ? "✓" : "○"}</span>
         </span>
       </button>
     </li>
