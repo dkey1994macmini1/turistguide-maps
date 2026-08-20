@@ -70,6 +70,7 @@ describe("Plan type", () => {
       archivedAt: null,
       createdAt: now,
       updatedAt: now,
+      heroStopId: null,
     };
 
     expect(plan.id).toBe("plan-1");
@@ -90,6 +91,7 @@ describe("Plan type", () => {
       archivedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
+      heroStopId: null,
     };
 
     // Runtime check: properties exist and are correct types

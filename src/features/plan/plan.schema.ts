@@ -9,4 +9,5 @@ export const plans = pgTable("plans", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   startDate: timestamp("start_date", { withTimezone: true }),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
+  heroStopId: text("hero_stop_id"),
 });

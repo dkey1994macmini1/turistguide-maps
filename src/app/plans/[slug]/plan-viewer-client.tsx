@@ -229,8 +229,32 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
     }
   }
 
-  // Find hero photo — use first stop with photo, or plan cover if available
+  async function handleHeroStopChange(stopId: string | null) {
+    try {
+      const res = await fetch(`/api/plans/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ heroStopId: stopId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPlan(data);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Find hero photo — use plan.heroStopId if set, else first stop with photo
   const heroPhoto = useMemo(() => {
+    if (plan?.heroStopId) {
+      for (const day of days) {
+        const stop = day.stops.find((s) => s.id === plan.heroStopId);
+        if (stop?.photo) {
+          return { src: stop.photo.src, alt: stop.photo.alt };
+        }
+      }
+    }
     for (const day of days) {
       for (const stop of day.stops) {
         if (stop.photo) {
@@ -239,7 +263,7 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
       }
     }
     return null;
-  }, [days]);
+  }, [days, plan?.heroStopId]);
 
   if (loading) {
     return (
@@ -292,6 +316,12 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
               onStartDateChange={handleStartDateChange}
               archived={plan.archivedAt !== null}
               onArchiveToggle={handleArchiveToggle}
+              heroStopId={plan.heroStopId ?? null}
+              onHeroStopChange={handleHeroStopChange}
+              stopsWithPhotos={days
+                .flatMap((day) => day.stops)
+                .filter((stop) => stop.photo)
+                .map((stop) => ({ id: stop.id, title: stop.title }))}
             />
           </>
         }

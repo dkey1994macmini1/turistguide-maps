@@ -84,6 +84,7 @@ const makePostgresPlanRepository = (db: DbClient): PlanRepository => ({
           ...(input.description !== undefined && { description: input.description }),
           ...(input.startDate !== undefined && { startDate: input.startDate }),
           ...(input.archivedAt !== undefined && { archivedAt: input.archivedAt }),
+          ...(input.heroStopId !== undefined && { heroStopId: input.heroStopId }),
           updatedAt: new Date(),
         };
         const [row] = await db.update(plans).set(updateData).where(eq(plans.id, id)).returning();

@@ -11,6 +11,7 @@ export function serializePlan(p: Plan) {
     archivedAt: p.archivedAt ? p.archivedAt.toISOString() : null,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
+    heroStopId: p.heroStopId ?? null,
   };
 }
 

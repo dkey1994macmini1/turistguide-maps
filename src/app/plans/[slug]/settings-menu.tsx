@@ -12,6 +12,9 @@ interface SettingsMenuProps {
   onStartDateChange: (date: string | null) => void;
   archived: boolean;
   onArchiveToggle: (archived: boolean) => void;
+  heroStopId: string | null;
+  onHeroStopChange: (stopId: string | null) => void;
+  stopsWithPhotos: ReadonlyArray<{ id: string; title: string }>;
 }
 
 export function SettingsMenu({
@@ -24,6 +27,9 @@ export function SettingsMenu({
   onStartDateChange,
   archived,
   onArchiveToggle,
+  heroStopId,
+  onHeroStopChange,
+  stopsWithPhotos,
 }: SettingsMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -91,6 +97,28 @@ export function SettingsMenu({
               className="settings-date-input"
             />
           </div>
+          {stopsWithPhotos.length > 0 && (
+            <>
+              <hr className="settings-menu-divider" />
+              <div className="settings-menu-option">
+                <span>Zdjęcie nagłówka</span>
+                <select
+                  className="settings-date-input"
+                  value={heroStopId ?? ""}
+                  onChange={(e) => {
+                    onHeroStopChange(e.target.value || null);
+                  }}
+                >
+                  <option value="">Automatyczne (pierwsze ze zdjęciem)</option>
+                  {stopsWithPhotos.map((stop) => (
+                    <option key={stop.id} value={stop.id}>
+                      {stop.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
           <hr className="settings-menu-divider" />
           <button
             className="settings-menu-action"

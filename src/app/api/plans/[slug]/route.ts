@@ -84,13 +84,14 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { startDate, title, description, archived } = body as Record<string, unknown>;
+  const { startDate, title, description, archived, heroStopId } = body as Record<string, unknown>;
 
   const updateData: {
     startDate?: Date | null;
     title?: string;
     description?: string;
     archivedAt?: Date | null;
+    heroStopId?: string | null;
   } = {};
 
   if (startDate !== undefined) {
@@ -126,6 +127,16 @@ export async function PATCH(
       return NextResponse.json({ error: "archived must be a boolean" }, { status: 400 });
     }
     updateData.archivedAt = archived ? new Date() : null;
+  }
+
+  if (heroStopId !== undefined) {
+    if (heroStopId === null) {
+      updateData.heroStopId = null;
+    } else if (typeof heroStopId === "string") {
+      updateData.heroStopId = heroStopId;
+    } else {
+      return NextResponse.json({ error: "heroStopId must be a string or null" }, { status: 400 });
+    }
   }
 
   if (Object.keys(updateData).length === 0) {

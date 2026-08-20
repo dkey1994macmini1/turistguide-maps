@@ -11,6 +11,7 @@ export type Plan = {
   readonly archivedAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
+  readonly heroStopId: string | null;
 };
 
 export type PlanCreateInput = {
@@ -26,4 +27,5 @@ export type PlanUpdateInput = {
   readonly description?: string;
   readonly startDate?: Date | null;
   readonly archivedAt?: Date | null;
+  readonly heroStopId?: string | null;
 };
