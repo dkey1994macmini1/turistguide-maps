@@ -101,7 +101,11 @@ function SortableStopItem({
         <div className="stop-item-content">
           <strong className="stop-title">{stop.title}</strong>
           {stop.summary && (
-            <span className="stop-summary">{stop.summary}</span>
+            <span className="stop-summary">
+              {stop.summary.length > 28
+                ? stop.summary.slice(0, 28).trimEnd() + "\u2026"
+                : stop.summary}
+            </span>
           )}
           {/* Meta chips */}
           {(stop.duration || stop.cost || stop.warnings.length > 0) && (
