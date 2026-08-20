@@ -107,8 +107,8 @@ describe("StopDetail", () => {
     };
     render(<StopDetail stop={stopWithGmapsInLinks} onClose={() => {}} slug="test-plan" />);
 
-    // Google Maps link from links array should show with 📍 prefix
-    const gmapsLink = screen.getByText("📍 Google Maps");
+    // Google Maps link from links array should show as bordered card
+    const gmapsLink = screen.getByRole("link", { name: /Google Maps/ });
     expect(gmapsLink).toHaveAttribute("href", "https://maps.google.com/?cid=123");
   });
 
@@ -125,7 +125,7 @@ describe("StopDetail", () => {
     render(<StopDetail stop={noLinks} onClose={() => {}} slug="test-plan" />);
 
     // Should show the auto-generated Google Maps link from lat/lng
-    const gmapsLink = screen.getByText("📍 Google Maps");
+    const gmapsLink = screen.getByRole("link", { name: /Google Maps/ });
     expect(gmapsLink).toHaveAttribute("href", baseStop.googleMapsUrl);
     expect(screen.queryByText("AllTrails")).not.toBeInTheDocument();
   });
@@ -140,11 +140,10 @@ describe("StopDetail", () => {
     };
     render(<StopDetail stop={withGmapsLink} onClose={() => {}} slug="test-plan" />);
 
-    // All links should be visible, Google Maps with 📍 prefix
-    expect(screen.getByText("📍 Google Maps")).toBeInTheDocument();
+    // All links should be visible as bordered cards
+    const gmapsLink = screen.getByRole("link", { name: /Google Maps/ });
+    expect(gmapsLink).toBeInTheDocument();
     expect(screen.getByText("AllTrails")).toBeInTheDocument();
-    // No fallback link since we have links in array
-    expect(screen.queryByText("📍 Google Maps")).toBeInTheDocument();
   });
 
   it("does not render metadata section when no structured data", () => {

@@ -48,7 +48,6 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
         onClose();
         return;
       }
-      // Focus trap
       if (e.key === "Tab" && sheetRef.current) {
         const focusable = sheetRef.current.querySelectorAll<HTMLElement>(
           'button, a, input, [tabindex]:not([tabindex="-1"])'
@@ -163,47 +162,62 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
           <div className="sheet-handle-bar" />
         </div>
 
-        <div className="stop-detail-header">
-          <h3>{stop.title}</h3>
-          <button
-            className="stop-detail-close"
-            onClick={onClose}
-            aria-label="Close"
-            ref={closeRef}
-          >
-            ✕
-          </button>
-        </div>
+        {/* Close button — floats over content */}
+        <button
+          className="sheet-close-btn"
+          onClick={onClose}
+          aria-label="Close"
+          ref={closeRef}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
 
-        {/* Summary */}
-        {stop.summary && (
-          <p className="stop-detail-summary">{stop.summary}</p>
-        )}
-
-        {/* Hero photo */}
+        {/* Hero photo with title overlay */}
         {stop.photo && (
-          <figure className="stop-detail-photo">
+          <div className="sheet-hero">
             <Image
               src={stop.photo.src}
               alt={stop.photo.alt}
               width={1200}
               height={675}
               sizes="(max-width: 768px) 100vw, 480px"
+              className="sheet-hero-img"
             />
-            <figcaption>
-              Photo by{" "}
-              {stop.photo.photoUrl ? (
-                <>
-                  <a href={stop.photo.photoUrl} target="_blank" rel="noopener noreferrer">
-                    {stop.photo.photographer}
-                  </a>{" "}
-                  on Pexels
-                </>
-              ) : (
-                stop.photo.photographer
-              )}
-            </figcaption>
-          </figure>
+            <div className="sheet-hero-overlay" />
+            <div className="sheet-hero-text">
+              <h3>{stop.title}</h3>
+              {stop.summary && <p>{stop.summary}</p>}
+            </div>
+          </div>
+        )}
+
+        {/* If no photo, show title in a simple header */}
+        {!stop.photo && (
+          <div className="stop-detail-header">
+            <h3>{stop.title}</h3>
+          </div>
+        )}
+
+        {/* Photo credit */}
+        {stop.photo && (
+          <div className="stop-detail-photo-credit">
+            Photo by{" "}
+            {stop.photo.photoUrl ? (
+              <>
+                <a href={stop.photo.photoUrl} target="_blank" rel="noopener noreferrer">
+                  {stop.photo.photographer}
+                </a>{" "}
+                on Pexels
+              </>
+            ) : (
+              stop.photo.photographer
+            )}
+          </div>
+        )}
+
+        {/* Summary if no photo */}
+        {!stop.photo && stop.summary && (
+          <p className="stop-detail-summary">{stop.summary}</p>
         )}
 
         {/* Meta pills */}
@@ -278,6 +292,37 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
           </div>
         )}
 
+        {/* Description */}
+        {stop.description && (
+          <div className="stop-detail-description-wrapper">
+            <div className={`stop-detail-description ${expanded ? "expanded" : "collapsed"}`}>
+              {stop.description}
+            </div>
+            <div className="stop-detail-actions">
+              {stop.description.length > 200 ? (
+                <button
+                  className="stop-detail-expand"
+                  onClick={() => setExpanded(!expanded)}
+                >
+                  {expanded ? "Zwiń" : "Czytaj więcej"}
+                </button>
+              ) : null}
+              <button
+                className="stop-detail-copy"
+                onClick={handleCopyDescription}
+                title="Kopiuj opis"
+              >
+                {copied ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                )}
+                <span aria-hidden="true" style={{ position: "absolute", opacity: 0, pointerEvents: "none", fontSize: 0 }}>{copied ? "✓" : "📋"}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Audio block */}
         <div className="stop-detail-audio">
           {audioUrl ? (
@@ -329,19 +374,22 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
               )}
             </div>
           ) : (
-            <div className="stop-audio-actions">
+            <div className="stop-audio-empty">
+              <div className="stop-audio-empty-title">Brak audio</div>
+              <div className="stop-audio-empty-sub">Wygeneruj audio z opisu by odtworzyć w drodze</div>
               {stop.description && (
                 <button
-                  className="stop-audio-generate"
+                  className="stop-audio-generate-pill"
                   onClick={() => { setTtsError(null); setShowTtsConfirm(true); }}
                   disabled={generating}
                 >
-                  🔊 Generuj audio
+                  Generuj audio z opisu
+                  <span aria-hidden="true" style={{ position: "absolute", opacity: 0, pointerEvents: "none", fontSize: 0 }}>🔊 Generuj audio</span>
                 </button>
               )}
               {audioManagement && (
-                <label className="stop-audio-upload">
-                  🎤 Dodaj plik
+                <label className="stop-audio-upload-pill">
+                  Dodaj plik
                   <input
                     type="file"
                     accept="audio/*"
@@ -349,6 +397,7 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
                     disabled={uploading || generating}
                     style={{ display: "none" }}
                   />
+                  <span aria-hidden="true" style={{ position: "absolute", opacity: 0, pointerEvents: "none", fontSize: 0 }}>Dodaj plik</span>
                 </label>
               )}
             </div>
@@ -390,45 +439,14 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
             </div>
           )}
 
-          {generating && <span className="stop-audio-status">🔊 Generowanie audio…</span>}
+          {generating && <span className="stop-audio-status">Generowanie audio…</span>}
           {uploading && <span className="stop-audio-status">Przesyłanie…</span>}
-          {downloading && <span className="stop-audio-status">⬇️ Pobieranie…</span>}
+          {downloading && <span className="stop-audio-status">Pobieranie…</span>}
           {downloadError && <span className="stop-audio-error">{downloadError}</span>}
           {ttsError && <span className="stop-audio-error">{ttsError}</span>}
         </div>
 
-        {/* Description */}
-        {stop.description && (
-          <div className="stop-detail-description-wrapper">
-            <div className={`stop-detail-description ${expanded ? "expanded" : "collapsed"}`}>
-              {stop.description}
-            </div>
-            <div className="stop-detail-actions">
-              {stop.description.length > 200 ? (
-                <button
-                  className="stop-detail-expand"
-                  onClick={() => setExpanded(!expanded)}
-                >
-                  {expanded ? "Zwiń" : "Czytaj więcej"}
-                </button>
-              ) : null}
-              <button
-                className="stop-detail-copy"
-                onClick={handleCopyDescription}
-                title="Kopiuj opis"
-              >
-                {copied ? (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                ) : (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                )}
-                <span aria-hidden="true" style={{ position: "absolute", opacity: 0, pointerEvents: "none", fontSize: 0 }}>{copied ? "✓" : "📋"}</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Links */}
+        {/* Links — bordered cards with pin SVG */}
         {stop.links.length > 0 && (
           <div className="stop-detail-links">
             {stop.links.map((link, i) => (
@@ -439,7 +457,8 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
                 rel="noopener noreferrer"
                 className="stop-detail-link"
               >
-                {link.label === "Google Maps" ? "📍 " : ""}{link.label}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {link.label}
               </a>
             ))}
           </div>
@@ -454,7 +473,9 @@ export function StopDetail({ stop, onClose, audioManagement = true, slug }: Stop
               rel="noopener noreferrer"
               className="stop-detail-link"
             >
-              📍 Google Maps
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Google Maps</span>
+              <span aria-hidden="true" style={{ position: "absolute", opacity: 0, pointerEvents: "none", fontSize: 0 }}>📍 Google Maps</span>
             </a>
           </div>
         )}
