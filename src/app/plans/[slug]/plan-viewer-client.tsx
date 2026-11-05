@@ -78,7 +78,9 @@ export function PlanViewerClient({ slug }: PlanViewerClientProps) {
   const artifactUrl =
     slug === "tuscany-family-august-2026"
       ? "/artifacts/tuscany-family-august-2026/"
-      : null;
+      : slug === "mexico-yucatan-15-day-road-trip-feb-2027"
+        ? "/artifacts/mexico-yucatan-12-full-days-feb-2027.pdf"
+        : null;
 
   const selectedStop: StopItem | null = useMemo(() => {
     if (!selectedStopId || !activeDay) return null;

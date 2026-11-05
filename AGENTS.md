@@ -4,6 +4,7 @@
 
 On every new session in this project:
 - `/skill turistguide-maps` — load project skill (architecture, patterns, deployment)
+- `/skill effect-ts-dk` — Effect TypeScript (`.agents/skills/effect-ts-dk` → `dot-files`)
 - Verify stack: `npm run test` (should pass), `npm run build` (should succeed)
 
 ## Active Resources
